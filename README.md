@@ -1,66 +1,161 @@
-# Memory Art — Backend (Part 1)
+<div align="center">
 
-Node.js/Express + MongoDB API for the AI-Powered Personalized Memory Art platform.
-This is **Part 1** of the build: project scaffold, database models, and authentication
-+ memory upload. AI generation, the storefront frontend, and checkout come in later parts.
+# 🎨 Memory Art
 
-## What's included in this part
+**Turn a photo, a voice note, or a date you haven't forgotten into a one-of-one illustrated piece.**
 
-- Express app with centralized error handling
-- MongoDB models: `User`, `Memory`, `Artwork`, `Product`, `Order`
-- JWT-based auth: register, login, get/update profile
-- Memory upload endpoints (photos + voice note via `multipart/form-data`, stored
-  locally on disk for now — swapped for Cloudinary/S3 in Part 2)
-- Verified: dependencies install clean (`npm audit` → 0 vulnerabilities), every
-  file passes `node --check`, and the server boots and answers `/api/health`.
+An AI-powered platform that reads the mood in a personal memory and transforms it into gallery-worthy art — watercolor, oil, pencil sketch, and more — ready to preview, gift, or buy as a print, canvas, mug, or memory book.
 
-## Setup
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&style=flat-square)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white&style=flat-square)](https://nodejs.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi&logoColor=white&style=flat-square)](https://fastapi.tiangolo.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white&style=flat-square)](https://www.mongodb.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com)
+[![Grok API](https://img.shields.io/badge/AI-Grok_(xAI)-000000?style=flat-square)](https://x.ai)
+[![Stripe](https://img.shields.io/badge/Payments-Stripe-635BFF?logo=stripe&logoColor=white&style=flat-square)](https://stripe.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](#license)
 
-```bash
-cd backend
-npm install
-cp .env.example .env   # then fill in MONGO_URI and JWT_SECRET
-npm run dev             # nodemon, or `npm start` for plain node
+</div>
+
+---
+
+## What this is
+
+Someone uploads a memory — a photo, a few lines about what happened, maybe a
+voice note or a date they don't want to lose. The platform reads the mood in
+it (joy, nostalgia, celebration, peace...), writes a short story, suggests a
+title, and generates original artwork in the style of their choosing.
+From there it's a real storefront: preview the piece framed on a wall, on a
+mug, or bound into a book, add it to a cart, and check out.
+
+Built as three independent services — a React frontend, a Node/Express API,
+and a Python/FastAPI AI service wrapping the Grok API — so each can be
+developed, deployed, and scaled on its own.
+
+## ✨ Features
+
+**Core flow**
+- 📤 Upload a memory — photos, a voice note, text, and important dates
+- 🧠 AI analysis — mood detection, a curated color palette, a short story, suggested titles, and tags
+- 🖌️ Artwork generation — 7 styles: watercolor, minimalist, oil painting, pencil sketch, vintage poster, pop art, abstract collage
+- 🛒 Storefront — gift-preview mockups, cart, real Stripe checkout, order history
+- 📜 Timeline — a chronological narrative woven across all your dated memories
+
+**Extras**
+- ⏳ **Memory Capsule** — seal a memory to reopen on a future date (an anniversary, a birthday); enforced at the API layer, not just hidden in the UI
+- 🤝 **Collaborative Memories** — share an invite link so friends and family can add their own photos and messages, no account required — their contributions feed into the AI-generated story
+- 🎙️ **Voice Transcription** — a loved one's voice note, transcribed and folded into the memory's analysis
+- ✨ **Memory Constellation** — the same memories laid out as an organic radial star map instead of a list
+
+## 🖼️ Preview
+
+> _Add a few screenshots or a short screen recording here once you've run
+> it locally — the landing page's gallery-wall hero and the artwork
+> generation flow are the best ones to show off._
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart LR
+    subgraph Client
+        FE["Frontend<br/>React + Tailwind"]
+    end
+    subgraph Server
+        BE["Backend API<br/>Node + Express + MongoDB"]
+        AI["AI Service<br/>FastAPI"]
+    end
+    subgraph External
+        GROK["Grok API<br/>(xAI)"]
+        CLOUD["Cloudinary"]
+        STRIPE["Stripe"]
+    end
+
+    FE -->|REST + JWT| BE
+    BE -->|internal HTTP| AI
+    AI -->|analyze / generate / transcribe| GROK
+    BE -->|photo / voice uploads| CLOUD
+    AI -->|re-host generated art| CLOUD
+    BE -->|checkout sessions + webhook| STRIPE
 ```
 
-You need a MongoDB instance — either a free [MongoDB Atlas](https://www.mongodb.com/atlas)
-cluster (recommended, works from anywhere) or a local `mongod`. Paste the
-connection string into `MONGO_URI` in `.env`.
+## 🛠️ Tech stack
 
-## API reference (Part 1)
+| Layer         | Stack |
+|---------------|-------|
+| **Frontend**  | React 19, React Router, Tailwind CSS v4, Axios, Vite |
+| **Backend**   | Node.js, Express, MongoDB (Mongoose), JWT auth, Multer, Stripe SDK |
+| **AI Service**| Python, FastAPI, httpx, Grok API (chat, vision, image generation, speech-to-text) |
+| **Storage**   | Cloudinary (photos, voice notes, generated artwork) |
+| **Payments**  | Stripe Checkout + webhooks |
 
-| Method | Route                | Auth |  Description                          |
-|--------|----------------------|------|---------------------------------------|
-| GET    | `/api/health`        | –    | Health check                          |
-| POST   | `/api/auth/register` | –    | `{ name, email, password, address? }` |
-| POST   | `/api/auth/login`    | –    | `{ email, password }`                 |
-| GET    | `/api/auth/me`       | ✅   | Current user profile                  |
-| PUT    | `/api/auth/me`       | ✅   | Update name/address                   |
-| POST   | `/api/memories`      | ✅   | Create memory (multipart: `photos[]`, `voiceNote`, `description`, `title`, `dates`, `location`) |
-| GET    | `/api/memories`      | ✅   | List your memories                    |
-| GET    | `/api/memories/:id`  | ✅   | Get one memory                        |
-| PUT    | `/api/memories/:id`  | ✅   | Update title/description/location     |
-| DELETE | `/api/memories/:id`  | ✅   | Delete a memory                       |
+## 📁 Project structure
 
-Authenticated requests need `Authorization: Bearer <token>` (token comes back
-from register/login).
+```
+memory-art-platform/
+├── frontend/       React app — everything the user sees and clicks
+├── backend/        Express API — auth, memories, artworks, orders, capsules
+└── ai-service/     FastAPI service — all Grok API calls live here
+```
 
-## Roadmap (next parts)
+Each folder has its own `README.md` with full setup steps and API
+reference — this file is the map; those are the manuals.
 
-- **Part 2 — AI service (FastAPI + Grok API):** emotion detection, story/title
-  generation, image generation, Cloudinary/S3 upload swap. Exposed internally
-  and called from `POST /api/memories/:id/analyze` and a new `artworkRoutes.js`.
-- **Part 3 — Frontend (React + Tailwind):** auth screens, memory upload flow,
-  artwork preview/customizer, timeline view.
-- **Part 4 — Storefront:** `Product`/`Order` routes, cart, checkout, gift preview
-  mockups.
-- **Part 5 — Extras:** Memory Capsule (scheduled reveal), collaborative memories,
-  memory constellation view.
+## 🚀 Getting started
 
-## Notes on the Grok API integration (coming in Part 2)
+**Prerequisites:** Node.js 20+, Python 3.11+, a MongoDB instance (local or
+[Atlas](https://www.mongodb.com/atlas)), an [xAI API key](https://console.x.ai).
+Cloudinary and Stripe keys are optional to start — everything runs without
+them, just with uploads falling back to local disk and checkout returning a
+clear "not configured" message instead of a confusing failure.
 
-You mentioned using the Grok (xAI) API. It'll sit in `ai-service/` as its own
-FastAPI app so it can be scaled/deployed independently of this Node backend,
-which will call it over HTTP (`AI_SERVICE_URL` in `.env`). You'll need an xAI
-API key (from https://console.x.ai) for that part — I can't reach x.ai from
-this sandbox to test it live, so I'll hand you code you run with your own key.
+Start all three services, in this order (each one calls the one before it):
+
+```bash
+# 1. AI service
+cd ai-service
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # add your XAI_API_KEY
+uvicorn app.main:app --reload --port 8000
+
+# 2. Backend
+cd backend
+npm install
+cp .env.example .env   # MONGO_URI, JWT_SECRET, AI_SERVICE_URL, etc.
+npm run dev             # http://localhost:5000
+
+# 3. Frontend
+cd frontend
+npm install
+cp .env.example .env   # VITE_API_URL
+npm run dev             # http://localhost:5173
+```
+
+Then open `http://localhost:5173` and create an account.
+
+## 📡 API overview
+
+Full endpoint references live in each service's README. At a glance:
+
+| Service | Base path | Highlights |
+|---------|-----------|------------|
+| Backend | `/api` | `/auth`, `/memories`, `/artworks`, `/products`, `/orders`, `/timeline`, `/contribute` |
+| AI Service | `/` | `/analyze`, `/artwork/generate`, `/timeline`, `/transcribe` |
+
+## 🗺️ Status
+
+The platform is feature-complete against its original spec, including every
+"stretch" feature: memory upload, AI analysis, artwork generation, a real
+storefront with Stripe checkout, memory capsules, collaborative
+contributions, voice transcription, and the constellation view.
+
+Built with heavy use of Claude — every piece was verified along the way
+(clean installs, dependency audits, syntax/lint checks, boot tests) rather
+than taken on faith. See the per-service READMEs for what's been verified
+versus what's written-correctly-but-untested against live third-party APIs
+(Grok, Cloudinary, Stripe aren't reachable from a sandboxed build
+environment).
+
+## 📄 License
+
+MIT — see [`LICENSE`](./LICENSE)
