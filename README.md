@@ -12,7 +12,7 @@ An AI-powered platform that reads the mood in a personal memory and transforms i
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white&style=flat-square)](https://www.mongodb.com)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com)
 [![Grok API](https://img.shields.io/badge/AI-Grok_(xAI)-000000?style=flat-square)](https://x.ai)
-[![Stripe](https://img.shields.io/badge/Payments-Stripe-635BFF?logo=stripe&logoColor=white&style=flat-square)](https://stripe.com)
+[![SSLCommerz](https://img.shields.io/badge/Payments-SSLCommerz-1E3A8A?style=flat-square)](https://www.sslcommerz.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](#license)
 
 </div>
@@ -36,16 +36,26 @@ developed, deployed, and scaled on its own.
 
 **Core flow**
 - 📤 Upload a memory — photos, a voice note, text, and important dates
-- 🧠 AI analysis — mood detection, a curated color palette, a short story, suggested titles, and tags
-- 🖌️ Artwork generation — 7 styles: watercolor, minimalist, oil painting, pencil sketch, vintage poster, pop art, abstract collage
-- 🛒 Storefront — gift-preview mockups, cart, real Stripe checkout, order history
-- 📜 Timeline — a chronological narrative woven across all your dated memories
+- 🧠 AI analysis — mood detection, a curated color palette, a short story,
+  suggested titles, and tags
+- 🖌️ Artwork generation — 7 styles: watercolor, minimalist, oil painting,
+  pencil sketch, vintage poster, pop art, abstract collage
+- 🛒 Storefront — gift-preview mockups, cart, real checkout via SSLCommerz
+  (cards, bKash, Nagad, Rocket, internet banking), order history
+- 📜 Timeline — a chronological narrative woven across all your dated
+  memories
 
 **Extras**
-- ⏳ **Memory Capsule** — seal a memory to reopen on a future date (an anniversary, a birthday); enforced at the API layer, not just hidden in the UI
-- 🤝 **Collaborative Memories** — share an invite link so friends and family can add their own photos and messages, no account required — their contributions feed into the AI-generated story
-- 🎙️ **Voice Transcription** — a loved one's voice note, transcribed and folded into the memory's analysis
-- ✨ **Memory Constellation** — the same memories laid out as an organic radial star map instead of a list
+- ⏳ **Memory Capsule** — seal a memory to reopen on a future date (an
+  anniversary, a birthday); enforced at the API layer, not just hidden in
+  the UI
+- 🤝 **Collaborative Memories** — share an invite link so friends and family
+  can add their own photos and messages, no account required — their
+  contributions feed into the AI-generated story
+- 🎙️ **Voice Transcription** — a loved one's voice note, transcribed and
+  folded into the memory's analysis
+- ✨ **Memory Constellation** — the same memories laid out as an organic
+  radial star map instead of a list
 
 ## 🖼️ Preview
 
@@ -67,7 +77,7 @@ flowchart LR
     subgraph External
         GROK["Grok API<br/>(xAI)"]
         CLOUD["Cloudinary"]
-        STRIPE["Stripe"]
+        SSL["SSLCommerz<br/>(cards + bKash/Nagad/Rocket)"]
     end
 
     FE -->|REST + JWT| BE
@@ -75,7 +85,7 @@ flowchart LR
     AI -->|analyze / generate / transcribe| GROK
     BE -->|photo / voice uploads| CLOUD
     AI -->|re-host generated art| CLOUD
-    BE -->|checkout sessions + webhook| STRIPE
+    BE -->|checkout sessions + IPN| SSL
 ```
 
 ## 🛠️ Tech stack
@@ -83,10 +93,10 @@ flowchart LR
 | Layer         | Stack |
 |---------------|-------|
 | **Frontend**  | React 19, React Router, Tailwind CSS v4, Axios, Vite |
-| **Backend**   | Node.js, Express, MongoDB (Mongoose), JWT auth, Multer, Stripe SDK |
+| **Backend**   | Node.js, Express, MongoDB (Mongoose), JWT auth, Multer |
 | **AI Service**| Python, FastAPI, httpx, Grok API (chat, vision, image generation, speech-to-text) |
 | **Storage**   | Cloudinary (photos, voice notes, generated artwork) |
-| **Payments**  | Stripe Checkout + webhooks |
+| **Payments**  | SSLCommerz (cards + bKash/Nagad/Rocket/internet banking), BDT |
 
 ## 📁 Project structure
 
@@ -104,9 +114,13 @@ reference — this file is the map; those are the manuals.
 
 **Prerequisites:** Node.js 20+, Python 3.11+, a MongoDB instance (local or
 [Atlas](https://www.mongodb.com/atlas)), an [xAI API key](https://console.x.ai).
-Cloudinary and Stripe keys are optional to start — everything runs without
-them, just with uploads falling back to local disk and checkout returning a
-clear "not configured" message instead of a confusing failure.
+Cloudinary and SSLCommerz keys are optional to start — everything runs
+without them, just with uploads falling back to local disk and checkout
+returning a clear "not configured" message instead of a confusing failure.
+[SSLCommerz sandbox signup](https://developer.sslcommerz.com) is free and
+instant. Note that SSLCommerz's callbacks POST directly to your backend, so
+testing checkout end-to-end locally needs a public tunnel (e.g.
+[ngrok](https://ngrok.com)) — see `backend/README.md` for the exact steps.
 
 Start all three services, in this order (each one calls the one before it):
 
@@ -139,23 +153,28 @@ Full endpoint references live in each service's README. At a glance:
 
 | Service | Base path | Highlights |
 |---------|-----------|------------|
-| Backend | `/api` | `/auth`, `/memories`, `/artworks`, `/products`, `/orders`, `/timeline`, `/contribute` |
+| Backend | `/api` | `/auth`, `/memories`, `/artworks`, `/products`, `/orders`, `/orders/sslcommerz/*`, `/timeline`, `/contribute` |
 | AI Service | `/` | `/analyze`, `/artwork/generate`, `/timeline`, `/transcribe` |
 
 ## 🗺️ Status
 
 The platform is feature-complete against its original spec, including every
 "stretch" feature: memory upload, AI analysis, artwork generation, a real
-storefront with Stripe checkout, memory capsules, collaborative
-contributions, voice transcription, and the constellation view.
+storefront with SSLCommerz checkout (cards, bKash, Nagad, Rocket, internet
+banking), memory capsules, collaborative contributions, voice transcription,
+and the constellation view.
 
 Built with heavy use of Claude — every piece was verified along the way
 (clean installs, dependency audits, syntax/lint checks, boot tests) rather
-than taken on faith. See the per-service READMEs for what's been verified
+than taken on faith. One real example: the official SSLCommerz npm package
+was dropped after `npm audit` surfaced an unfixable CRLF-injection advisory
+in one of its dependencies — the integration calls SSLCommerz's REST API
+directly instead. See the per-service READMEs for what's been verified
 versus what's written-correctly-but-untested against live third-party APIs
-(Grok, Cloudinary, Stripe aren't reachable from a sandboxed build
+(Grok, Cloudinary, and SSLCommerz aren't reachable from a sandboxed build
 environment).
 
 ## 📄 License
 
-MIT — see [`LICENSE`](./LICENSE)
+MIT — see [`LICENSE`](./LICENSE), or replace this section with whatever fits
+your repo.

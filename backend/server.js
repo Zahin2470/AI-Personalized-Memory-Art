@@ -14,7 +14,7 @@ const timelineRoutes = require('./src/routes/timelineRoutes');
 const productRoutes = require('./src/routes/productRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const contributeRoutes = require('./src/routes/contributeRoutes');
-const { handleStripeWebhook } = require('./src/controllers/webhookController');
+const sslcommerzRoutes = require('./src/routes/sslcommerzRoutes');
 
 const app = express();
 
@@ -24,12 +24,6 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL || '*' }));
-
-// Stripe webhook needs the raw request body for signature verification, so
-// it's mounted here - BEFORE express.json() - and is the one route in this
-// app that isn't JSON-parsed.
-app.post('/api/orders/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
@@ -46,6 +40,13 @@ app.use('/api/memories', memoryRoutes);
 app.use('/api/artworks', artworkRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/products', productRoutes);
+// IMPORTANT: this must be registered before '/api/orders' below - Express
+// matches middleware in registration order, not by path specificity, and
+// orderRoutes applies router.use(protect) to everything under it. If
+// '/api/orders' were registered first, every SSLCommerz callback to
+// '/api/orders/sslcommerz/*' would hit that auth check and get rejected
+// with 401 before ever reaching these public handlers.
+app.use('/api/orders/sslcommerz', sslcommerzRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/contribute', contributeRoutes);
 

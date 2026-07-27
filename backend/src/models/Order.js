@@ -33,6 +33,8 @@ const orderSchema = new mongoose.Schema(
       type: [orderItemSchema],
       validate: (v) => Array.isArray(v) && v.length > 0,
     },
+    // Amounts are stored in the smallest currency unit - paisa for BDT
+    // (same 1/100 subdivision as cents, so display math is unchanged).
     totalCents: {
       type: Number,
       required: true,
@@ -40,8 +42,11 @@ const orderSchema = new mongoose.Schema(
     },
     currency: {
       type: String,
-      default: 'USD',
+      default: 'BDT',
     },
+    // SSLCommerz requires customer name/phone/address on every transaction,
+    // digital or physical - so this is always collected at checkout now,
+    // not just for physical products.
     shippingAddress: {
       line1: String,
       line2: String,
@@ -49,6 +54,7 @@ const orderSchema = new mongoose.Schema(
       state: String,
       postalCode: String,
       country: String,
+      phone: String,
     },
     status: {
       type: String,

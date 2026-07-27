@@ -1,18 +1,15 @@
 const asyncHandler = require('express-async-handler');
-const Stripe = require('stripe');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const { CATALOG, isPhysical } = require('../config/catalog');
-
-const getStripe = () => {
-  if (!process.env.STRIPE_SECRET_KEY) return null;
-  return new Stripe(process.env.STRIPE_SECRET_KEY);
-};
+const { CATALOG } = require('../config/catalog');
+const sslcommerz = require('../services/sslcommerzClient');
 
 // @desc    Create an order from a set of cart products
 // @route   POST /api/orders
 // @access  Private
-// body: { items: [{ productId, quantity }], shippingAddress? }
+// body: { items: [{ productId, quantity }], shippingAddress }
+// shippingAddress is always required - SSLCommerz mandates customer
+// name/phone/address on every transaction, digital goods included.
 const createOrder = asyncHandler(async (req, res) => {
   const { items, shippingAddress } = req.body;
 
@@ -21,18 +18,17 @@ const createOrder = asyncHandler(async (req, res) => {
     throw new Error('items must be a non-empty array of { productId, quantity }');
   }
 
+  if (!shippingAddress?.line1 || !shippingAddress?.phone) {
+    res.status(400);
+    throw new Error('An address and phone number are required to check out');
+  }
+
   const productIds = items.map((i) => i.productId);
   const products = await Product.find({ _id: { $in: productIds }, user: req.user._id, ordered: false });
 
   if (products.length !== productIds.length) {
     res.status(400);
     throw new Error('One or more products were not found in your cart (already ordered, or don\u2019t belong to you)');
-  }
-
-  const needsShipping = products.some((p) => isPhysical(p.type));
-  if (needsShipping && !shippingAddress?.line1) {
-    res.status(400);
-    throw new Error('A shipping address is required for physical products');
   }
 
   const orderItems = items.map(({ productId, quantity }) => {
@@ -50,7 +46,7 @@ const createOrder = asyncHandler(async (req, res) => {
     user: req.user._id,
     items: orderItems,
     totalCents,
-    shippingAddress: needsShipping ? shippingAddress : undefined,
+    shippingAddress,
   });
 
   await Product.updateMany({ _id: { $in: productIds } }, { $set: { ordered: true } });
@@ -83,14 +79,13 @@ const getOrder = asyncHandler(async (req, res) => {
   res.json({ success: true, data: order });
 });
 
-// @desc    Create a Stripe Checkout session for an order and return its URL
+// @desc    Start an SSLCommerz payment session for an order and return its gateway URL
 // @route   POST /api/orders/:id/checkout
 // @access  Private
 const createCheckoutSession = asyncHandler(async (req, res) => {
-  const stripe = getStripe();
-  if (!stripe) {
+  if (!sslcommerz.isConfigured()) {
     res.status(503);
-    throw new Error('Payments aren\u2019t configured yet - set STRIPE_SECRET_KEY in the backend .env');
+    throw new Error('Payments aren\u2019t configured yet - set SSLCOMMERZ_STORE_ID and SSLCOMMERZ_STORE_PASSWORD in the backend .env');
   }
 
   const order = await Order.findOne({ _id: req.params.id, user: req.user._id }).populate('items.product');
@@ -103,32 +98,56 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
     throw new Error(`This order is already ${order.status}`);
   }
 
-  const line_items = order.items.map((item) => ({
-    quantity: item.quantity,
-    price_data: {
-      currency: order.currency.toLowerCase(),
-      unit_amount: item.unitPriceCents,
-      product_data: {
-        name: CATALOG[item.product.type]?.label || item.product.type,
-      },
-    },
-  }));
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  // Unique per attempt (not just per order) so a retried/failed payment can
+  // be re-initiated with a fresh tran_id, as SSLCommerz requires.
+  const tranId = `order_${order._id}_${Date.now()}`;
+  const addr = order.shippingAddress;
+  const productSummary = order.items
+    .map((i) => CATALOG[i.product.type]?.label || i.product.type)
+    .join(', ');
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    payment_method_types: ['card'],
-    line_items,
-    success_url: `${clientUrl}/checkout/success?orderId=${order._id}`,
-    cancel_url: `${clientUrl}/checkout/cancel?orderId=${order._id}`,
-    metadata: { orderId: order._id.toString() },
+  const session = await sslcommerz.initSession({
+    total_amount: order.totalCents / 100,
+    currency: order.currency,
+    tran_id: tranId,
+    success_url: `${backendUrl}/api/orders/sslcommerz/success`,
+    fail_url: `${backendUrl}/api/orders/sslcommerz/fail`,
+    cancel_url: `${backendUrl}/api/orders/sslcommerz/cancel`,
+    ipn_url: `${backendUrl}/api/orders/sslcommerz/ipn`,
+    shipping_method: 'Courier',
+    product_name: productSummary,
+    product_category: 'Personalized Art',
+    product_profile: 'general',
+    cus_name: req.user.name,
+    cus_email: req.user.email,
+    cus_add1: addr.line1,
+    cus_add2: addr.line2 || addr.line1,
+    cus_city: addr.city,
+    cus_state: addr.state || addr.city,
+    cus_postcode: addr.postalCode,
+    cus_country: addr.country,
+    cus_phone: addr.phone,
+    ship_name: req.user.name,
+    ship_add1: addr.line1,
+    ship_add2: addr.line2 || addr.line1,
+    ship_city: addr.city,
+    ship_state: addr.state || addr.city,
+    ship_postcode: addr.postalCode,
+    ship_country: addr.country,
+    value_a: order._id.toString(), // carried through to the success/fail/cancel callbacks
   });
 
-  order.paymentReference = session.id;
+  if (session.status !== 'SUCCESS' || !session.GatewayPageURL) {
+    res.status(502);
+    throw new Error(`SSLCommerz session failed: ${session.failedreason || 'unknown error'}`);
+  }
+
+  order.paymentReference = tranId;
   await order.save();
 
-  res.json({ success: true, data: { url: session.url } });
+  res.json({ success: true, data: { url: session.GatewayPageURL } });
 });
 
 // @desc    Cancel a pending order and release its products back to the cart

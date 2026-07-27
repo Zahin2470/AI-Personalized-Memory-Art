@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema(
     },
     currency: {
       type: String,
-      default: 'USD',
+      default: 'BDT',
     },
     previewUrl: {
       type: String, // realistic mockup (framed on wall, on a mug, etc.)
