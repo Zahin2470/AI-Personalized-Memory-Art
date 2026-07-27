@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------
+   DESIGN TOKENS
+   A small fine-art-gallery palette: ink (deep charcoal-navy walls),
+   parchment (mounted-print surfaces), brass (gold-leaf frame accent),
+   and emerald (a second, cooler accent used sparingly). Deliberately not
+   the cream+terracotta or near-black+single-accent defaults - three
+   restrained hues instead of one loud one, because the product itself
+   already produces colorful art, so the shell around it stays disciplined.
+------------------------------------------------------------------------ */
+@theme {
+  --color-ink: #1c2128;
+  --color-ink-soft: #262b35;
+  --color-ink-line: #3a4150;
+
+  --color-parchment: #f7f1e4;
+  --color-parchment-dim: #efe7d8;
+  --color-parchment-line: #ddd2b8;
+
+  --color-brass: #c9a15d;
+  --color-brass-bright: #ddbb7c;
+  --color-brass-deep: #8c6d38;
+
+  --color-emerald: #2f6f5e;
+  --color-emerald-deep: #1e4a3e;
+  --color-emerald-bright: #4a9683;
+
+  --color-warmgray: #6b6558;
+  --color-warmgray-dim: #948f80;
+
+  --font-display: "Instrument Serif", "Iowan Old Style", serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --shadow-frame: 0 1px 2px rgba(28, 33, 40, 0.08), 0 12px 32px -12px rgba(28, 33, 40, 0.35);
+  --shadow-frame-hover: 0 2px 4px rgba(28, 33, 40, 0.12), 0 24px 48px -16px rgba(28, 33, 40, 0.45);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-parchment);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-brass);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass-deep);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .placard {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+}
+
+/* Staggered settle-in for the hero gallery wall frames. Deliberately no
+   rotation here - FramedArt applies its own tilt on a nested element, and
+   nested rotate() transforms compose/add, so rotating both layers by the
+   same angle would double the visible tilt. This layer only handles the
+   fade/rise/scale entrance. */
+@keyframes frame-settle {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-frame-settle {
+  animation: frame-settle 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---------------------------------------------------------------------
+   AMBIENT MOTION SYSTEM
+   The idea: framed/decorative pieces drift gently, like hung art settling
+   in still air - a small, slow, staggered bob + tilt, never applied to
+   text or interactive controls (moving targets are bad UX). Hover adds a
+   second, faster layer of feedback on top. Everything here is caught by
+   the prefers-reduced-motion rule above, which zeroes animation/transition
+   duration globally.
+------------------------------------------------------------------------ */
+@keyframes ambient-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--tilt, 0deg));
+  }
+  50% {
+    transform: translateY(-7px) rotate(calc(var(--tilt, 0deg) + 0.7deg));
+  }
+}
+
+.animate-ambient-float {
+  animation: ambient-float var(--float-duration, 5s) ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+}
+
+/* Frame hover: lift + deepen shadow together, swapped via CSS custom
+   properties so both the resting and hover box-shadow stay theme-driven. */
+.frame-shadow {
+  box-shadow: var(--shadow-frame);
+  transition: box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.frame-shadow:hover {
+  box-shadow: var(--shadow-frame-hover);
+}
+
+/* Underline that grows in from the left on hover - used for nav/text links */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.link-underline:hover::after {
+  transform: scaleX(1);
+}
+
+/* Soft, slow-drifting blurred color fields for ambient background depth -
+   always behind content (negative z-index / pointer-events-none at the
+   call site), low opacity, never affects layout or readability. */
+@keyframes blob-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(3%, -4%) scale(1.06);
+  }
+  66% {
+    transform: translate(-3%, 3%) scale(0.97);
+  }
+}
+
+.animate-blob-drift {
+  animation: blob-drift var(--blob-duration, 18s) ease-in-out infinite;
+  animation-delay: var(--blob-delay, 0s);
+}
