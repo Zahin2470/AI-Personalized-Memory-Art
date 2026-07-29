@@ -35,6 +35,20 @@ const orderSchema = new mongoose.Schema(
     },
     // Amounts are stored in the smallest currency unit - paisa for BDT
     // (same 1/100 subdivision as cents, so display math is unchanged).
+    // totalCents is the FINAL amount charged (subtotal - discountCents).
+    subtotalCents: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    discountCode: {
+      type: String,
+      uppercase: true,
+    },
+    discountCents: {
+      type: Number,
+      default: 0,
+    },
     totalCents: {
       type: Number,
       required: true,
@@ -43,6 +57,11 @@ const orderSchema = new mongoose.Schema(
     currency: {
       type: String,
       default: 'BDT',
+    },
+    giftMessage: {
+      type: String,
+      trim: true,
+      maxlength: 500,
     },
     // SSLCommerz requires customer name/phone/address on every transaction,
     // digital or physical - so this is always collected at checkout now,

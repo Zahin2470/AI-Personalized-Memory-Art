@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import api from '../lib/api';
 import FramedArt from '../components/FramedArt';
+import ArtworkVariationCard from '../components/ArtworkVariationCard';
 import Button from '../components/Button';
 import Field from '../components/Field';
 import { ART_STYLES } from '../lib/constants';
@@ -29,6 +30,7 @@ export default function MemoryDetail() {
   const [invitingLoading, setInvitingLoading] = useState(false);
   const [revealAt, setRevealAt] = useState('');
   const [generatingStyle, setGeneratingStyle] = useState(null);
+  const [regeneratingId, setRegeneratingId] = useState(null);
   const [error, setError] = useState('');
 
   const loadAll = useCallback(async () => {
@@ -144,6 +146,42 @@ export default function MemoryDetail() {
       setGeneratingStyle(null);
     }
   };
+
+  const toggleFavorite = async (artworkId) => {
+    try {
+      const { data } = await api.put(`/artworks/${artworkId}/favorite`);
+      setArtworks((prev) => prev.map((a) => (a._id === artworkId ? data.data : a)));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Couldn’t update that favorite.');
+    }
+  };
+
+  const regenerateArtwork = async (artworkId) => {
+    setRegeneratingId(artworkId);
+    setError('');
+    try {
+      const { data } = await api.post(`/artworks/${artworkId}/regenerate`);
+      setArtworks((prev) => [data.data, ...prev]);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Couldn’t generate another take.');
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
+  // Groups artworks into variation sets - each set keyed by its root
+  // artwork's id (a plain generation's own id, or a regeneration's
+  // `variationOf`), ordered oldest-first within the set so the carousel
+  // reads as a history of attempts.
+  const groupedArtworks = useMemo(() => {
+    const groups = new Map();
+    [...artworks].reverse().forEach((a) => {
+      const rootId = a.variationOf || a._id;
+      if (!groups.has(rootId)) groups.set(rootId, []);
+      groups.get(rootId).push(a);
+    });
+    return Array.from(groups.values());
+  }, [artworks]);
 
   if (loading) return <p className="mx-auto max-w-4xl px-6 py-16 text-sm text-warmgray">Loading…</p>;
   if (!memory) return <p className="mx-auto max-w-4xl px-6 py-16 text-sm text-red-700">{error || 'Memory not found.'}</p>;
@@ -327,26 +365,21 @@ export default function MemoryDetail() {
       </div>
 
       {/* ------------------------------------------------------- ARTWORK GALLERY */}
-      {artworks.length > 0 && (
+      {groupedArtworks.length > 0 && (
         <div className="mt-12 border-t border-ink/10 pt-10">
           <p className="placard text-[11px] text-brass-deep">Your pieces from this memory</p>
           <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3">
-            {artworks.map((a, i) => (
-              <div key={a._id}>
-                <FramedArt
-                  title={a.title || memory.title}
-                  medium={a.style.replace('_', ' ')}
-                  imageUrl={a.imageUrl}
-                  gradient={STYLE_GRADIENTS[a.style]}
-                  index={i}
-                />
-                <Link
-                  to={`/artworks/${a._id}/product`}
-                  className="mt-2 inline-block text-xs text-warmgray underline underline-offset-4"
-                >
-                  Make a product from this
-                </Link>
-              </div>
+            {groupedArtworks.map((group, i) => (
+              <ArtworkVariationCard
+                key={group[0]._id}
+                group={group}
+                index={i}
+                memoryTitle={memory.title}
+                styleGradients={STYLE_GRADIENTS}
+                onToggleFavorite={toggleFavorite}
+                onRegenerate={regenerateArtwork}
+                regenerating={group.some((a) => a._id === regeneratingId)}
+              />
             ))}
           </div>
         </div>

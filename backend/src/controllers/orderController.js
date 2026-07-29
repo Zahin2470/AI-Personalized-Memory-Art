@@ -1,17 +1,19 @@
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const DiscountCode = require('../models/DiscountCode');
 const { CATALOG } = require('../config/catalog');
 const sslcommerz = require('../services/sslcommerzClient');
+const { releaseOrder } = require('../services/orderLifecycle');
 
 // @desc    Create an order from a set of cart products
 // @route   POST /api/orders
 // @access  Private
-// body: { items: [{ productId, quantity }], shippingAddress }
+// body: { items: [{ productId, quantity }], shippingAddress, promoCode?, giftMessage? }
 // shippingAddress is always required - SSLCommerz mandates customer
 // name/phone/address on every transaction, digital goods included.
 const createOrder = asyncHandler(async (req, res) => {
-  const { items, shippingAddress } = req.body;
+  const { items, shippingAddress, promoCode, giftMessage } = req.body;
 
   if (!Array.isArray(items) || items.length === 0) {
     res.status(400);
@@ -40,16 +42,40 @@ const createOrder = asyncHandler(async (req, res) => {
     };
   });
 
-  const totalCents = orderItems.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0);
+  const subtotalCents = orderItems.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0);
+
+  // Re-validate the code server-side rather than trusting a client-computed
+  // discount - the /validate endpoint is only a preview.
+  let discount = null;
+  let discountCents = 0;
+  if (promoCode) {
+    discount = await DiscountCode.findOne({ code: promoCode.trim().toUpperCase() });
+    if (!discount || !discount.isValid()) {
+      res.status(400);
+      throw new Error('That discount code isn\u2019t valid or has expired');
+    }
+    discountCents = discount.computeDiscount(subtotalCents);
+  }
+
+  const totalCents = subtotalCents - discountCents;
 
   const order = await Order.create({
     user: req.user._id,
     items: orderItems,
+    subtotalCents,
+    discountCode: discount?.code,
+    discountCents,
     totalCents,
     shippingAddress,
+    giftMessage,
   });
 
   await Product.updateMany({ _id: { $in: productIds } }, { $set: { ordered: true } });
+
+  if (discount) {
+    discount.usedCount += 1;
+    await discount.save();
+  }
 
   res.status(201).json({ success: true, data: order });
 });
@@ -164,9 +190,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
     throw new Error(`Only pending orders can be cancelled (this one is ${order.status})`);
   }
 
-  order.status = 'cancelled';
-  await order.save();
-  await Product.updateMany({ _id: { $in: order.items.map((i) => i.product) } }, { $set: { ordered: false } });
+  await releaseOrder(order);
 
   res.json({ success: true, data: order });
 });

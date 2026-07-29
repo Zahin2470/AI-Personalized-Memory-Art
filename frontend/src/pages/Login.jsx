@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import Field from '../components/Field';
 import Button from '../components/Button';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 export default function Login() {
   const { login } = useAuth();
@@ -30,7 +31,11 @@ export default function Login() {
       <p className="placard text-[11px] text-brass-deep">Welcome back</p>
       <h1 className="mt-3 font-display text-4xl italic">Log in</h1>
 
-      <form onSubmit={onSubmit} className="mt-10 space-y-5">
+      <div className="mt-8">
+        <GoogleAuthButton onError={setError} />
+      </div>
+
+      <form onSubmit={onSubmit} className="mt-6 space-y-5">
         <Field
           label="Email"
           type="email"
@@ -39,14 +44,19 @@ export default function Login() {
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           placeholder="you@example.com"
         />
-        <Field
-          label="Password"
-          type="password"
-          required
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          placeholder="••••••••"
-        />
+        <div>
+          <Field
+            label="Password"
+            type="password"
+            required
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            placeholder="••••••••"
+          />
+          <Link to="/forgot-password" className="mt-2 inline-block text-xs text-warmgray underline underline-offset-4">
+            Forgot password?
+          </Link>
+        </div>
 
         {error && <p className="text-sm text-red-700">{error}</p>}
 

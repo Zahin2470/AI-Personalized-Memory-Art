@@ -1,6 +1,6 @@
 const Order = require('../models/Order');
-const Product = require('../models/Product');
 const sslcommerz = require('../services/sslcommerzClient');
+const { releaseOrder } = require('../services/orderLifecycle');
 
 const clientUrl = () => process.env.CLIENT_URL || 'http://localhost:5173';
 
@@ -23,14 +23,6 @@ const markPaid = async (order) => {
   if (order.status === 'pending') {
     order.status = 'paid';
     await order.save();
-  }
-};
-
-const releaseToCart = async (order) => {
-  if (order.status === 'pending') {
-    order.status = 'cancelled';
-    await order.save();
-    await Product.updateMany({ _id: { $in: order.items.map((i) => i.product) } }, { $set: { ordered: false } });
   }
 };
 
@@ -63,7 +55,7 @@ const handleSuccess = async (req, res) => {
 const handleFail = async (req, res) => {
   try {
     const order = await findOrderForCallback(req.body);
-    if (order) await releaseToCart(order);
+    if (order) await releaseOrder(order);
     res.redirect(`${clientUrl()}/checkout/cancel?orderId=${order?._id || ''}&reason=fail`);
   } catch (error) {
     console.error('SSLCommerz fail handler error:', error.message);
@@ -76,7 +68,7 @@ const handleFail = async (req, res) => {
 const handleCancel = async (req, res) => {
   try {
     const order = await findOrderForCallback(req.body);
-    if (order) await releaseToCart(order);
+    if (order) await releaseOrder(order);
     res.redirect(`${clientUrl()}/checkout/cancel?orderId=${order?._id || ''}&reason=cancel`);
   } catch (error) {
     console.error('SSLCommerz cancel handler error:', error.message);

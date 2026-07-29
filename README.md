@@ -57,6 +57,17 @@ developed, deployed, and scaled on its own.
 - ✨ **Memory Constellation** — the same memories laid out as an organic
   radial star map instead of a list
 
+**Account, admin & commerce**
+- 🔐 Forgot/reset password and Google sign-in
+- 🛠️ Admin dashboard — stats, user list, order management with fulfillment
+  status, contribution moderation
+- 🏷️ Discount codes and gift messages at checkout
+- 🔔 In-app notifications (artwork ready, contribution received, order
+  status changed) and a favorites page
+- 🔁 Regenerate/variations — "try another take" on any generated piece,
+  grouped into one card with a history carousel
+- 🔎 Search & filter your memories by keyword or mood
+
 ## 🖼️ Preview
 
 > _Add a few screenshots or a short screen recording here once you've run
@@ -78,32 +89,38 @@ flowchart LR
         GROK["Grok API<br/>(xAI)"]
         CLOUD["Cloudinary"]
         SSL["SSLCommerz<br/>(cards + bKash/Nagad/Rocket)"]
+        GOOGLE["Google Identity<br/>(sign-in)"]
+        SMTP["SMTP<br/>(password reset)"]
     end
 
     FE -->|REST + JWT| BE
+    FE -->|ID token| GOOGLE
+    BE -->|verify token| GOOGLE
     BE -->|internal HTTP| AI
     AI -->|analyze / generate / transcribe| GROK
     BE -->|photo / voice uploads| CLOUD
     AI -->|re-host generated art| CLOUD
     BE -->|checkout sessions + IPN| SSL
+    BE -->|reset emails| SMTP
 ```
 
 ## 🛠️ Tech stack
 
 | Layer         | Stack |
 |---------------|-------|
-| **Frontend**  | React 19, React Router, Tailwind CSS v4, Axios, Vite |
-| **Backend**   | Node.js, Express, MongoDB (Mongoose), JWT auth, Multer |
+| **Frontend**  | React 19, React Router, Tailwind CSS v4, Axios, Vite, `@react-oauth/google` |
+| **Backend**   | Node.js, Express, MongoDB (Mongoose), JWT auth, Multer, Nodemailer, `google-auth-library`, `express-rate-limit` |
 | **AI Service**| Python, FastAPI, httpx, Grok API (chat, vision, image generation, speech-to-text) |
 | **Storage**   | Cloudinary (photos, voice notes, generated artwork) |
 | **Payments**  | SSLCommerz (cards + bKash/Nagad/Rocket/internet banking), BDT |
+| **Auth**      | JWT + bcrypt, Google OAuth (Identity Services), SMTP-based password reset |
 
 ## 📁 Project structure
 
 ```
 memory-art-platform/
 ├── frontend/       React app — everything the user sees and clicks
-├── backend/        Express API — auth, memories, artworks, orders, capsules
+├── backend/        Express API — auth, memories, artworks, orders, capsules, admin
 └── ai-service/     FastAPI service — all Grok API calls live here
 ```
 
@@ -121,6 +138,11 @@ returning a clear "not configured" message instead of a confusing failure.
 instant. Note that SSLCommerz's callbacks POST directly to your backend, so
 testing checkout end-to-end locally needs a public tunnel (e.g.
 [ngrok](https://ngrok.com)) — see `backend/README.md` for the exact steps.
+Google sign-in and password-reset emails are likewise optional — leave
+`GOOGLE_CLIENT_ID` / `SMTP_*` blank in `backend/.env` and those two features
+just don't activate rather than breaking anything else. Admin access is
+granted via a comma-separated `ADMIN_EMAILS` env var, checked at signup and
+login.
 
 Start all three services, in this order (each one calls the one before it):
 
@@ -153,26 +175,41 @@ Full endpoint references live in each service's README. At a glance:
 
 | Service | Base path | Highlights |
 |---------|-----------|------------|
-| Backend | `/api` | `/auth`, `/memories`, `/artworks`, `/products`, `/orders`, `/orders/sslcommerz/*`, `/timeline`, `/contribute` |
+| Backend | `/api` | `/auth` (incl. Google + forgot/reset password), `/memories` (search/filter), `/artworks` (incl. regenerate), `/products`, `/orders`, `/orders/sslcommerz/*`, `/timeline`, `/contribute`, `/discount-codes`, `/notifications`, `/admin/*` |
 | AI Service | `/` | `/analyze`, `/artwork/generate`, `/timeline`, `/transcribe` |
 
 ## 🗺️ Status
 
-The platform is feature-complete against its original spec, including every
-"stretch" feature: memory upload, AI analysis, artwork generation, a real
-storefront with SSLCommerz checkout (cards, bKash, Nagad, Rocket, internet
-banking), memory capsules, collaborative contributions, voice transcription,
-and the constellation view.
+The platform is feature-complete against its original spec, every
+"stretch" feature, and a full quality/enrichment pass on top: memory
+upload, AI analysis, artwork generation (with regenerate/variations and
+favorites), a real storefront with SSLCommerz checkout (cards, bKash,
+Nagad, Rocket, internet banking, discount codes, gift messages), memory
+capsules, collaborative contributions, voice transcription, the
+constellation view, search & filter, forgot/reset password, Google
+sign-in, an admin dashboard, and in-app notifications.
 
 Built with heavy use of Claude — every piece was verified along the way
 (clean installs, dependency audits, syntax/lint checks, boot tests) rather
-than taken on faith. One real example: the official SSLCommerz npm package
-was dropped after `npm audit` surfaced an unfixable CRLF-injection advisory
-in one of its dependencies — the integration calls SSLCommerz's REST API
-directly instead. See the per-service READMEs for what's been verified
-versus what's written-correctly-but-untested against live third-party APIs
-(Grok, Cloudinary, and SSLCommerz aren't reachable from a sandboxed build
-environment).
+than taken on faith. A few examples that surfaced along the way:
+
+- The official SSLCommerz npm package was dropped after `npm audit`
+  surfaced an unfixable CRLF-injection advisory in one of its dependencies
+  — the integration calls SSLCommerz's REST API directly instead.
+- Discount-code cancellation and SSLCommerz's fail/cancel callbacks used to
+  each have their own copy of "release this order back to the cart" logic;
+  once discount codes needed releasing too, that duplication became a real
+  risk of the two paths drifting apart, so it was consolidated into one
+  shared helper.
+- The memory search endpoint escapes regex special characters in the
+  search term before building a `RegExp` from user input — verified with a
+  direct unit test, not just assumed safe.
+
+See the per-service READMEs for the full verified-vs-untested breakdown —
+in short, everything that talks to a live third-party API (Grok,
+Cloudinary, SSLCommerz, Google, SMTP) is written correctly against their
+documented interfaces but untested against the real thing, since none of
+those are reachable from a sandboxed build environment.
 
 ## 📄 License
 

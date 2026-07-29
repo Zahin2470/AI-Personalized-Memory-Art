@@ -89,6 +89,25 @@ dependency.
    the live sandbox — worth a manual test checkout (SSLCommerz's sandbox
    supports test bKash/Nagad/card flows) before you rely on it.
 
+### Wiring up password reset + Google sign-in
+
+- **Password reset** needs any SMTP provider — `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS`
+  in `.env`. Gmail works with an [app password](https://myaccount.google.com/apppasswords)
+  (not your normal password); free tiers on Brevo/SendGrid/Mailgun work too.
+  Leave these blank and the rest of the app still runs — `/forgot-password`
+  just can't actually send anything.
+- **Google sign-in** needs a free OAuth Client ID — Google Cloud Console →
+  APIs & Credentials → Create Credentials → OAuth Client ID → Web
+  application. Add your frontend origin (`http://localhost:5173` for local
+  dev) under Authorized JavaScript origins. Put the client ID in both
+  `backend/.env` (`GOOGLE_CLIENT_ID`) and `frontend/.env`
+  (`VITE_GOOGLE_CLIENT_ID`) — same value in both places. Leave both blank and
+  the Google button just doesn't render, rather than breaking the page.
+- Neither of these was testable against the real Google/SMTP APIs from my
+  sandbox (no network access to `accounts.google.com` or any SMTP host) —
+  the token-verification and email-sending code is written correctly
+  against their documented flows, but budget time for a real test.
+
 ## API reference
 
 | Method | Route                    | Auth | Description                          |
@@ -96,17 +115,21 @@ dependency.
 | GET    | `/api/health`              | –    | Health check                          |
 | POST   | `/api/auth/register`      | –    | `{ name, email, password, address? }` |
 | POST   | `/api/auth/login`         | –    | `{ email, password }`                 |
+| POST   | `/api/auth/google`        | –    | `{ credential }` — Google ID token from the frontend; signs in or creates an account |
+| POST   | `/api/auth/forgot-password`| –   | `{ email }` — always returns the same generic response, rate-limited (5/15min) |
+| POST   | `/api/auth/reset-password` | –   | `{ token, password }` — token from the emailed link |
 | GET    | `/api/auth/me`             | ✅   | Current user profile                  |
 | PUT    | `/api/auth/me`             | ✅   | Update name/address                   |
 | POST   | `/api/memories`            | ✅   | Create memory (multipart: `photos[]`, `voiceNote`, `description`, `title`, `dates`, `location`) |
-| GET    | `/api/memories`            | ✅   | List your memories                    |
+| GET    | `/api/memories`            | ✅   | List your memories (optionally `?q=`, `?emotion=`, `?dateFrom=`, `?dateTo=`) |
 | GET    | `/api/memories/:id`        | ✅   | Get one memory                        |
 | POST   | `/api/memories/:id/analyze`| ✅   | Run AI analysis (emotion/story/titles/tags) |
 | PUT    | `/api/memories/:id`        | ✅   | Update title/description/location     |
 | DELETE | `/api/memories/:id`        | ✅   | Delete a memory                       |
 | POST   | `/api/artworks`            | ✅   | `{ memoryId, style }` → generates AI artwork |
-| GET    | `/api/artworks`            | ✅   | List your artworks (optionally `?memoryId=`) |
+| GET    | `/api/artworks`            | ✅   | List your artworks (optionally `?memoryId=` or `?favorite=true`) |
 | GET    | `/api/artworks/:id`        | ✅   | Get one artwork                       |
+| POST   | `/api/artworks/:id/regenerate` | ✅ | Another take on an existing artwork, same memory/style |
 | PUT    | `/api/artworks/:id/favorite`| ✅  | Toggle favorite                       |
 | DELETE | `/api/artworks/:id`        | ✅   | Delete an artwork                     |
 | GET    | `/api/timeline`             | ✅   | Chronological narrative across dated memories |
@@ -130,6 +153,25 @@ dependency.
 | POST   | `/api/memories/:id/transcribe` | ✅ | Transcribes the memory's voice note via Grok STT |
 | GET    | `/api/contribute/:token`   | –    | Public - look up a memory by invite token |
 | POST   | `/api/contribute/:token`   | –    | Public - add a photo/message (`contributorName`, `text?`, `photo?`) |
+| POST   | `/api/discount-codes/validate` | ✅ | Preview a code's discount without consuming a use |
+| GET    | `/api/admin/stats`         | ✅ Admin | User/memory/artwork counts, revenue, orders by status |
+| GET    | `/api/admin/users`         | ✅ Admin | List all users |
+| GET    | `/api/admin/orders`        | ✅ Admin | List all orders across all users |
+| PUT    | `/api/admin/orders/:id/status` | ✅ Admin | Update fulfillment status |
+| GET    | `/api/admin/contributions` | ✅ Admin | List all contributions, for moderation |
+| DELETE | `/api/admin/contributions/:id` | ✅ Admin | Remove a contribution |
+| POST   | `/api/admin/discount-codes` | ✅ Admin | Create a code |
+| GET    | `/api/admin/discount-codes` | ✅ Admin | List all codes |
+| PUT    | `/api/admin/discount-codes/:id` | ✅ Admin | Toggle active, update limits |
+| DELETE | `/api/admin/discount-codes/:id` | ✅ Admin | Delete a code |
+| GET    | `/api/notifications`       | ✅   | Recent notifications + unread count |
+| PUT    | `/api/notifications/:id/read` | ✅ | Mark one read |
+| PUT    | `/api/notifications/read-all` | ✅ | Mark all read |
+
+`GET /api/artworks` also now accepts `?favorite=true` to list just the
+favorited pieces (for the Favorites page) - `Artwork.isFavorite` and the
+toggle endpoint (`PUT /api/artworks/:id/favorite`) existed since Part 2 but
+had no UI to actually use them until this pass.
 
 Authenticated requests need `Authorization: Bearer <token>` (token comes back
 from register/login). The two `/api/contribute` routes are intentionally
@@ -168,10 +210,34 @@ friends and family can contribute without creating an account.
   with `axios`, using the exact request shape from their own documented
   `curl` examples - same correctness, zero vulnerable dependency.
 
+## Enrichment pass notes
+
+- **Admin promotion** is env-driven (`ADMIN_EMAILS`, comma-separated) rather
+  than a database flag you set by hand - checked at both signup and login,
+  so adding an existing user's email promotes them their next login.
+- **Discount codes** are re-validated server-side at order creation - the
+  `/validate` endpoint is only ever a preview, never trusted for the actual
+  charge. Cancelling a discounted order releases the code's usage count too
+  (`src/services/orderLifecycle.js` - the same shared helper used by both
+  user-initiated cancellation and the SSLCommerz fail/cancel callbacks, so
+  that logic can't drift out of sync between the two paths).
+- **Notifications** are in-app only (no email/push) - a `Notification`
+  model with three triggers (artwork ready, contribution received, order
+  status changed), each wrapped so a notification failure can't break the
+  action that triggered it.
+- **Regenerate/variations**: `Artwork.variationOf` always points at the true
+  root artwork, even when regenerating a regeneration - grouping a whole
+  variation set is one query, not a recursive chain walk.
+- **Memory search** (`?q=`) escapes regex special characters in the search
+  term before building the query - unescaped user input in a `RegExp`
+  constructor is a real injection/ReDoS risk, not just a style concern.
+
 ## Status
 
-The platform as originally scoped, plus every "stretch" feature from the
-spec, is now built and verified across all three services: memory upload,
-AI analysis, artwork generation, timeline/constellation views, cart,
-checkout, memory capsules, collaborative contributions, and voice
-transcription.
+The platform as originally scoped, every "stretch" feature from the spec,
+and a full quality/enrichment pass are all built and verified: memory
+upload, AI analysis, artwork generation (with regeneration/variations),
+timeline/constellation views, search & filter, cart, checkout with discount
+codes and gift messages, memory capsules, collaborative contributions,
+voice transcription, forgot/reset password, Google sign-in, an admin
+dashboard, and in-app notifications with a favorites page.

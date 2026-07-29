@@ -1,5 +1,7 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { isAdminEmail } = require('../utils/adminEmails');
 
 const addressSchema = new mongoose.Schema(
   {
@@ -45,6 +47,31 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    // How this account authenticates. Google-created accounts still get a
+    // (random, unusable-by-them) password so the `password` field's
+    // `required: true` above doesn't need special-casing elsewhere.
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
+    },
+    googleId: {
+      type: String,
+      index: true,
+      sparse: true, // only Google-linked accounts have this, so it can't collide on null
+    },
+    // Password reset (forgot-password flow). Only a SHA-256 hash of the
+    // reset token is ever stored - the raw token goes out in the email link
+    // and is never persisted, same principle as never storing plaintext
+    // passwords: a DB leak alone shouldn't be enough to reset an account.
+    passwordResetTokenHash: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      select: false,
+    },
   },
   { timestamps: true }
 );
@@ -57,9 +84,31 @@ userSchema.pre('save', async function hashPassword(next) {
   next();
 });
 
+// Auto-promote to admin if this email is in ADMIN_EMAILS - runs on every
+// save, not just creation, so adding someone to the list after they already
+// have an account promotes them the next time anything touches their doc
+// (login already does an explicit check + save for this too, see
+// authController.loginUser).
+userSchema.pre('save', function autoPromoteAdmin(next) {
+  if (this.role !== 'admin' && isAdminEmail(this.email)) {
+    this.role = 'admin';
+  }
+  next();
+});
+
 // Instance method to compare passwords
 userSchema.methods.matchPassword = async function matchPassword(enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
+};
+
+// Generates a password-reset token: returns the RAW token (to email to the
+// user) while storing only its hash + a 30-minute expiry on the document.
+// Caller is responsible for calling `.save()` afterward.
+userSchema.methods.createPasswordResetToken = function createPasswordResetToken() {
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetTokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  this.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+  return rawToken;
 };
 
 module.exports = mongoose.model('User', userSchema);

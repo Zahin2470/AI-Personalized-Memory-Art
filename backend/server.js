@@ -15,6 +15,9 @@ const productRoutes = require('./src/routes/productRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const contributeRoutes = require('./src/routes/contributeRoutes');
 const sslcommerzRoutes = require('./src/routes/sslcommerzRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
+const discountCodeRoutes = require('./src/routes/discountCodeRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
 
 const app = express();
 
@@ -49,6 +52,9 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders/sslcommerz', sslcommerzRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/contribute', contributeRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/discount-codes', discountCodeRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

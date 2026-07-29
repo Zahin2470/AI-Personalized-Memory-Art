@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import Field from '../components/Field';
 import Button from '../components/Button';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 export default function Register() {
   const { register } = useAuth();
@@ -37,7 +38,11 @@ export default function Register() {
       <h1 className="mt-3 font-display text-4xl italic">Create an account</h1>
       <p className="mt-3 text-sm text-warmgray">Just a name, email, and password — an address only shows up later, at checkout, if you order something physical.</p>
 
-      <form onSubmit={onSubmit} className="mt-10 space-y-5">
+      <div className="mt-8">
+        <GoogleAuthButton onError={setError} />
+      </div>
+
+      <form onSubmit={onSubmit} className="mt-6 space-y-5">
         <Field
           label="Name"
           required

@@ -75,8 +75,27 @@ const createMemory = asyncHandler(async (req, res) => {
 // @desc    List the logged-in user's memories
 // @route   GET /api/memories
 // @access  Private
+// @desc    List the logged-in user's memories, with optional search/filter
+// @route   GET /api/memories?q=&emotion=&dateFrom=&dateTo=
+// @access  Private
 const getMemories = asyncHandler(async (req, res) => {
-  const memories = await Memory.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const { q, emotion, dateFrom, dateTo } = req.query;
+  const filter = { user: req.user._id };
+
+  if (q) {
+    const regex = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); // escape regex special chars in user input
+    filter.$or = [{ title: regex }, { description: regex }];
+  }
+  if (emotion) {
+    filter['aiAnalysis.emotion'] = emotion;
+  }
+  if (dateFrom || dateTo) {
+    filter.createdAt = {};
+    if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+    if (dateTo) filter.createdAt.$lte = new Date(dateTo);
+  }
+
+  const memories = await Memory.find(filter).sort({ createdAt: -1 });
   res.json({ success: true, count: memories.length, data: memories.map(maskIfSealed) });
 });
 

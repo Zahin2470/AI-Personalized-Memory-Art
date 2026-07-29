@@ -6,12 +6,12 @@
 // as sensible BDT price points for the local market, not a currency
 // conversion of the old USD prices.
 const CATALOG = {
-  digital_download: { label: 'Digital Download', priceCents: 10000 }, // ৳100
-  framed_print: { label: 'Framed Print', priceCents: 35000 }, // ৳350
-  canvas_print: { label: 'Canvas Print', priceCents: 28000 }, // ৳280
-  photo_book: { label: 'Memory Book', priceCents: 22000 }, // ৳220
-  mug: { label: 'Keepsake Mug', priceCents: 50000 }, // ৳500
-  cushion: { label: 'Cushion', priceCents: 100000 }, // ৳1,000
+  digital_download: { label: 'Digital Download', priceCents: 50000 }, // ৳500
+  framed_print: { label: 'Framed Print', priceCents: 350000 }, // ৳3,500
+  canvas_print: { label: 'Canvas Print', priceCents: 280000 }, // ৳2,800
+  photo_book: { label: 'Memory Book', priceCents: 220000 }, // ৳2,200
+  mug: { label: 'Keepsake Mug', priceCents: 90000 }, // ৳900
+  cushion: { label: 'Cushion', priceCents: 160000 }, // ৳1,600
 };
 
 const isPhysical = (type) => type !== 'digital_download';

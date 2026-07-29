@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import Button from './Button';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -35,12 +36,20 @@ export default function Navbar() {
               <Link to="/constellation" className="link-underline placard text-[11px] text-ink/70 hover:text-ink">
                 Constellation
               </Link>
+              <Link to="/favorites" className="link-underline placard text-[11px] text-ink/70 hover:text-ink">
+                Favorites
+              </Link>
               <Link to="/cart" className="link-underline placard text-[11px] text-ink/70 hover:text-ink">
                 Cart
               </Link>
               <Link to="/orders" className="link-underline placard text-[11px] text-ink/70 hover:text-ink">
                 Orders
               </Link>
+              {user?.role === 'admin' && (
+                <Link to="/admin" className="link-underline placard text-[11px] text-brass-deep hover:text-ink">
+                  Admin
+                </Link>
+              )}
             </>
           )}
         </nav>
@@ -48,6 +57,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
+              <NotificationBell />
               <span className="hidden font-body text-sm text-warmgray sm:inline">Hi, {user?.name?.split(' ')[0]}</span>
               <Button
                 variant="ghost"

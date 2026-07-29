@@ -6,6 +6,7 @@ import Field from '../components/Field';
 import { PRODUCT_TYPES } from '../lib/constants';
 
 const labelFor = (type) => PRODUCT_TYPES.find((p) => p.id === type)?.label || type;
+const fmt = (cents) => Math.round(cents / 100).toLocaleString('en-US');
 
 export default function Cart() {
   const [items, setItems] = useState([]);
@@ -18,6 +19,11 @@ export default function Cart() {
     country: 'Bangladesh',
     phone: '',
   });
+  const [giftMessage, setGiftMessage] = useState('');
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null); // { code, discountCents }
+  const [promoChecking, setPromoChecking] = useState(false);
+  const [promoError, setPromoError] = useState('');
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState('');
@@ -42,7 +48,34 @@ export default function Cart() {
     }
   };
 
-  const totalCents = items.reduce((sum, p) => sum + p.priceCents * (quantities[p._id] || 1), 0);
+  const subtotalCents = items.reduce((sum, p) => sum + p.priceCents * (quantities[p._id] || 1), 0);
+  const discountCents = appliedPromo?.discountCents || 0;
+  const totalCents = Math.max(0, subtotalCents - discountCents);
+
+  const applyPromo = async () => {
+    setPromoError('');
+    if (!promoInput.trim()) return;
+
+    setPromoChecking(true);
+    try {
+      const { data } = await api.post('/discount-codes/validate', {
+        code: promoInput.trim(),
+        subtotalCents,
+      });
+      setAppliedPromo(data.data);
+    } catch (err) {
+      setAppliedPromo(null);
+      setPromoError(err.response?.data?.message || 'That code isn’t valid.');
+    } finally {
+      setPromoChecking(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput('');
+    setPromoError('');
+  };
 
   const checkout = async () => {
     setError('');
@@ -56,6 +89,8 @@ export default function Cart() {
       const { data: orderRes } = await api.post('/orders', {
         items: items.map((p) => ({ productId: p._id, quantity: quantities[p._id] || 1 })),
         shippingAddress: address,
+        promoCode: appliedPromo?.code,
+        giftMessage: giftMessage.trim() || undefined,
       });
 
       const { data: checkoutRes } = await api.post(`/orders/${orderRes.data._id}/checkout`);
@@ -100,13 +135,55 @@ export default function Cart() {
                   className="w-16 rounded-md border border-ink/15 px-2 py-1.5 text-center text-sm"
                 />
                 <span className="placard w-16 text-right text-xs">
-                  ৳{Math.round((p.priceCents * (quantities[p._id] || 1)) / 100).toLocaleString('en-US')}
+                  ৳{fmt(p.priceCents * (quantities[p._id] || 1))}
                 </span>
                 <button onClick={() => removeItem(p._id)} className="text-xs text-warmgray underline underline-offset-4">
                   Remove
                 </button>
               </div>
             ))}
+          </div>
+
+          {/* ---------------------------------------------------- PROMO CODE */}
+          <div className="mt-10">
+            <p className="placard text-[11px] text-brass-deep">Discount code</p>
+            {appliedPromo ? (
+              <div className="mt-3 flex items-center justify-between rounded-md bg-emerald/10 px-4 py-3">
+                <span className="text-sm text-emerald-deep">
+                  <strong>{appliedPromo.code}</strong> applied — ৳{fmt(appliedPromo.discountCents)} off
+                </span>
+                <button onClick={removePromo} className="text-xs text-warmgray underline underline-offset-4">
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="mt-3 flex gap-3">
+                <input
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  placeholder="Enter a code"
+                  className="flex-1 rounded-md border border-ink/15 px-4 py-2.5 text-sm uppercase focus:border-brass-deep focus:outline-none"
+                />
+                <Button variant="outline" size="sm" onClick={applyPromo} disabled={promoChecking}>
+                  {promoChecking ? 'Checking…' : 'Apply'}
+                </Button>
+              </div>
+            )}
+            {promoError && <p className="mt-2 text-xs text-red-700">{promoError}</p>}
+          </div>
+
+          {/* ---------------------------------------------------- GIFT MESSAGE */}
+          <div className="mt-10">
+            <p className="placard text-[11px] text-brass-deep">Is this a gift?</p>
+            <Field
+              label="Gift note (optional)"
+              as="textarea"
+              rows={3}
+              value={giftMessage}
+              onChange={(e) => setGiftMessage(e.target.value)}
+              placeholder="Add a note for the person receiving this…"
+              className="mt-3"
+            />
           </div>
 
           <div className="mt-10">
@@ -135,11 +212,23 @@ export default function Cart() {
             </div>
           </div>
 
-          <div className="mt-10 flex items-center justify-between border-t border-ink/10 pt-6">
-            <span className="font-display text-3xl italic">৳{Math.round(totalCents / 100).toLocaleString('en-US')}</span>
-            <Button variant="brass" size="lg" onClick={checkout} disabled={checkingOut}>
-              {checkingOut ? 'Redirecting to payment…' : 'Checkout'}
-            </Button>
+          <div className="mt-10 space-y-2 border-t border-ink/10 pt-6">
+            <div className="flex items-center justify-between text-sm text-warmgray">
+              <span>Subtotal</span>
+              <span>৳{fmt(subtotalCents)}</span>
+            </div>
+            {discountCents > 0 && (
+              <div className="flex items-center justify-between text-sm text-emerald-deep">
+                <span>Discount ({appliedPromo.code})</span>
+                <span>−৳{fmt(discountCents)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-2">
+              <span className="font-display text-3xl italic">৳{fmt(totalCents)}</span>
+              <Button variant="brass" size="lg" onClick={checkout} disabled={checkingOut}>
+                {checkingOut ? 'Redirecting to payment…' : 'Checkout'}
+              </Button>
+            </div>
           </div>
 
           {error && <p className="mt-4 text-sm text-red-700">{error}</p>}

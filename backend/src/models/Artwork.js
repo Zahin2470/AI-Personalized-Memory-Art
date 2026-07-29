@@ -55,6 +55,17 @@ const artworkSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Set when this artwork is a "try another take" of an earlier one.
+    // Always points to the ORIGINAL root artwork (not necessarily the
+    // immediate previous attempt) - regenerating a regeneration still
+    // points here, so grouping a whole variation set is one query
+    // (find where _id == root OR variationOf == root) instead of walking
+    // a chain.
+    variationOf: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Artwork',
+      index: true,
+    },
   },
   { timestamps: true }
 );

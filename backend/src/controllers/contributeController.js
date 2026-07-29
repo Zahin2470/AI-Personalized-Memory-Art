@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Memory = require('../models/Memory');
 const Contribution = require('../models/Contribution');
 const { storeFile } = require('../services/fileStorage');
+const { notify } = require('../services/notify');
 
 // @desc    Look up a memory by its invite token (minimal info only - this is
 //          a public, unauthenticated route reachable by anyone with the link)
@@ -46,6 +47,17 @@ const addContribution = asyncHandler(async (req, res) => {
     text: text?.trim(),
     photo,
   });
+
+  try {
+    await notify({
+      userId: memory.user,
+      type: 'contribution_received',
+      message: `${contributorName.trim()} added to "${memory.title || 'a memory'}".`,
+      link: `/memories/${memory._id}`,
+    });
+  } catch (error) {
+    console.error('Failed to create contribution_received notification:', error.message);
+  }
 
   res.status(201).json({ success: true, data: contribution });
 });

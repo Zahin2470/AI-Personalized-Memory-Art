@@ -156,12 +156,42 @@ npm run dev             # http://localhost:5173
 Requires the backend (Part 1) running, which in turn calls the AI service
 (Part 2) for analysis/artwork generation, and SSLCommerz sandbox keys in the
 backend's `.env` for checkout to complete (see `../backend/README.md`).
-Without those running, the landing page and auth pages still work, but the
-dashboard/upload/analysis/checkout flow won't.
+`VITE_GOOGLE_CLIENT_ID` is optional — leave it blank and the Google sign-in
+button on Login/Register just doesn't render, rather than breaking the page.
+Without the backend running, the landing page and auth pages still work, but
+the dashboard/upload/analysis/checkout flow won't.
 
 ## Status
 
-The platform as originally scoped, plus every "stretch" feature from the
-spec, is now built: memory upload, AI analysis, artwork generation,
-timeline/constellation views, cart, checkout, memory capsules, collaborative
-contributions, and voice transcription.
+The platform as originally scoped, every "stretch" feature from the spec,
+and a full quality/enrichment pass are all built: memory upload, AI
+analysis, artwork generation, timeline/constellation views, cart, checkout,
+memory capsules, collaborative contributions, voice transcription,
+forgot/reset password, Google sign-in, an admin dashboard, in-app
+notifications, favorites, discount codes, gift messages, artwork
+regenerate/variations, and search & filter.
+
+**The enrichment pass, in detail:**
+
+- Forgot/reset password (`ForgotPassword.jsx`, `ResetPassword.jsx`),
+  Google sign-in (`GoogleAuthButton.jsx`)
+- Admin dashboard (`AdminDashboard`, `AdminOrders`, `AdminUsers`,
+  `AdminDiscountCodes`, `AdminContributions`) + discount codes and gift
+  messages in `Cart.jsx`
+- In-app notifications (`NotificationBell`, 30s polling), Favorites page
+  and the favorite-toggle heart button on `MemoryDetail`'s artwork gallery
+  (the backend toggle existed since Part 2 but had no UI until now)
+- Regenerate/variations (`ArtworkVariationCard` groups a piece's history
+  into one card with a prev/next carousel and a "try another take" button)
+  and search & filter on the Dashboard (debounced keyword search + mood
+  filter chips)
+
+A genuinely synchronous `setState` in an effect turned up in the search/
+filter work (`Dashboard.jsx`) - unlike the fetch-on-mount pattern elsewhere
+in this app, where the setState calls happen inside a promise continuation,
+`setLoading(true)` here fires synchronously as the effect starts, which is
+what the flagged rule targets. Kept the pattern (it's the standard
+search-as-you-type + loading-indicator approach, and there's no derived
+value it could come from instead) and documented why in a comment next to
+the disable, rather than either suppressing it silently or restructuring
+away from a well-established pattern.
