@@ -95,7 +95,7 @@ export default function Contribute() {
           type="file"
           accept="image/jpeg,image/png,image/webp"
           onChange={(e) => setPhoto(e.target.files[0] || null)}
-          className="cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-xs file:text-parchment"
+          className="cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-ink-fixed file:px-4 file:py-2 file:text-xs file:text-parchment-fixed"
         />
 
         {error && <p className="text-sm text-red-700">{error}</p>}

@@ -1,5 +1,5 @@
 const VARIANTS = {
-  primary: 'bg-ink text-parchment hover:bg-ink-soft hover:shadow-lg',
+  primary: 'bg-ink-fixed text-parchment-fixed hover:bg-ink-soft hover:shadow-lg',
   brass: 'bg-brass text-ink hover:bg-brass-bright hover:shadow-lg',
   outline: 'border border-ink/20 text-ink hover:border-ink/50 bg-transparent',
   ghost: 'text-ink hover:bg-ink/5',

@@ -69,7 +69,7 @@ export default function Dashboard() {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search your memories…"
-          className="w-full max-w-xs rounded-full border border-ink/15 bg-white px-5 py-2.5 text-sm focus:border-brass-deep focus:outline-none sm:w-64"
+          className="w-full max-w-xs rounded-full border border-ink/15 bg-white px-5 py-2.5 text-sm focus:border-brass-deep focus:outline-none dark:border-parchment-line/20 dark:bg-ink-soft dark:text-parchment sm:w-64"
         />
         <div className="flex flex-wrap gap-2">
           {EMOTION_LABELS.map((e) => (

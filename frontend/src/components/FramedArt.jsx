@@ -52,11 +52,9 @@ export default function FramedArt({
       } ${className}`}
     >
       <div
-        className={`frame-shadow relative rounded-sm p-2 hover:-translate-y-1 ${
-          onDark ? 'bg-parchment' : 'bg-white'
-        } ${selected ? 'ring-2 ring-brass ring-offset-2 ring-offset-transparent' : ''} ${
-          generating ? 'animate-generation-pulse' : ''
-        }`}
+        className={`frame-shadow frame-mat relative rounded-sm p-2 hover:-translate-y-1 ${
+          selected ? 'ring-2 ring-brass ring-offset-2 ring-offset-transparent' : ''
+        } ${generating ? 'animate-generation-pulse' : ''}`}
       >
         <div
           className={`relative aspect-[4/5] w-full overflow-hidden rounded-[1px] bg-gradient-to-br ${gradient} transition-transform duration-500 ${
@@ -75,7 +73,7 @@ export default function FramedArt({
       </div>
 
       {(title || medium || meta) && (
-        <div className={`mt-3 px-1 ${onDark ? 'text-parchment' : 'text-ink'}`}>
+        <div className={`mt-3 px-1 ${onDark ? 'text-parchment-fixed' : 'text-ink'}`}>
           {title && <p className="font-display text-lg italic leading-tight">{title}</p>}
           {(medium || meta) && (
             <p className={`placard mt-1 text-[10px] ${onDark ? 'text-brass-bright' : 'text-warmgray'}`}>

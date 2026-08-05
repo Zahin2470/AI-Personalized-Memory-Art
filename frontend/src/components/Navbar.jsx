@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import Button from './Button';
 import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -55,6 +56,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {isAuthenticated ? (
             <>
               <NotificationBell />

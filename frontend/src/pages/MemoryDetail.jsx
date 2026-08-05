@@ -252,7 +252,7 @@ export default function MemoryDetail() {
               readOnly
               value={inviteUrl}
               onClick={(e) => e.target.select()}
-              className="w-full max-w-md rounded-md border border-ink/15 bg-white px-3 py-2 text-xs text-warmgray"
+              className="w-full max-w-md rounded-md border border-ink/15 bg-white px-3 py-2 text-xs text-warmgray dark:border-parchment-line/20 dark:bg-ink-soft"
             />
             <Button variant="ghost" size="sm" onClick={() => navigator.clipboard?.writeText(inviteUrl)}>
               Copy

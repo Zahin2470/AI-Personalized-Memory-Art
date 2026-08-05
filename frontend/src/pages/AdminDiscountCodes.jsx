@@ -87,7 +87,7 @@ export default function AdminDiscountCodes() {
           <select
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value })}
-            className="mt-2 block w-full rounded-md border border-ink/15 bg-white px-4 py-3 text-sm"
+            className="mt-2 block w-full rounded-md border border-ink/15 bg-white px-4 py-3 text-sm dark:border-parchment-line/20 dark:bg-ink-soft dark:text-parchment"
           >
             <option value="percent">Percent off</option>
             <option value="fixed">Fixed amount off</option>

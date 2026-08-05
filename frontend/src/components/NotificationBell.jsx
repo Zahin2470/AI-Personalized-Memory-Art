@@ -87,14 +87,14 @@ export default function NotificationBell() {
           <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brass-deep text-[9px] font-medium text-parchment">
+          <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brass-deep text-[9px] font-medium text-parchment-fixed">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-sm border border-ink/10 bg-white shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-80 rounded-sm border border-ink/10 bg-white shadow-lg dark:border-parchment-line/20 dark:bg-ink-soft">
           <div className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
             <p className="placard text-[10px] text-warmgray">Notifications</p>
             {unreadCount > 0 && (

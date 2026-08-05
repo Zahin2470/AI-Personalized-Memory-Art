@@ -93,14 +93,14 @@ export default function NewMemory() {
             {dates.map((d, i) => (
               <div key={i} className="flex gap-3">
                 <input
-                  className="w-1/2 rounded-md border border-ink/15 bg-white px-4 py-3 text-sm focus:border-brass-deep focus:outline-none"
+                  className="w-1/2 rounded-md border border-ink/15 bg-white px-4 py-3 text-sm focus:border-brass-deep focus:outline-none dark:border-parchment-line/20 dark:bg-ink-soft dark:text-parchment"
                   placeholder="Label, e.g. First Trip"
                   value={d.label}
                   onChange={(e) => updateDate(i, 'label', e.target.value)}
                 />
                 <input
                   type="date"
-                  className="w-1/2 rounded-md border border-ink/15 bg-white px-4 py-3 text-sm focus:border-brass-deep focus:outline-none"
+                  className="w-1/2 rounded-md border border-ink/15 bg-white px-4 py-3 text-sm focus:border-brass-deep focus:outline-none dark:border-parchment-line/20 dark:bg-ink-soft dark:text-parchment"
                   value={d.date}
                   onChange={(e) => updateDate(i, 'date', e.target.value)}
                 />
@@ -122,7 +122,7 @@ export default function NewMemory() {
           accept="image/jpeg,image/png,image/webp"
           multiple
           onChange={(e) => setPhotos(Array.from(e.target.files))}
-          className="cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-xs file:text-parchment"
+          className="cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-ink-fixed file:px-4 file:py-2 file:text-xs file:text-parchment-fixed"
         />
 
         <Field
@@ -130,7 +130,7 @@ export default function NewMemory() {
           type="file"
           accept="audio/mpeg,audio/wav,audio/mp4"
           onChange={(e) => setVoiceNote(e.target.files[0] || null)}
-          className="cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-xs file:text-parchment"
+          className="cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-ink-fixed file:px-4 file:py-2 file:text-xs file:text-parchment-fixed"
         />
 
         {error && <p className="text-sm text-red-700">{error}</p>}

@@ -105,7 +105,7 @@ export default function Landing() {
   return (
     <div>
       {/* ---------------------------------------------------------------- HERO */}
-      <section className="relative overflow-hidden bg-ink text-parchment">
+      <section className="relative overflow-hidden bg-ink-fixed text-parchment-fixed">
         <AmbientBlobs variant="hero" />
         <div className="relative mx-auto grid max-w-6xl gap-16 px-6 py-20 md:grid-cols-2 md:py-28">
           <div className="flex flex-col justify-center">
@@ -115,7 +115,7 @@ export default function Landing() {
               <br />
               deserves a frame.
             </h1>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-parchment/70">
+            <p className="mt-6 max-w-md text-base leading-relaxed text-parchment-fixed/70">
               Upload a photo, a voice note, or just a date you haven’t forgotten. We turn it
               into a one-of-one illustrated piece — watercolor, oil, pencil, or five styles more —
               ready to hang, gift, or keep.
@@ -124,7 +124,7 @@ export default function Landing() {
               <Button as={Link} to="/register" variant="brass" size="lg">
                 Start a piece
               </Button>
-              <Button as="a" href="#styles" variant="ghost" size="lg" className="text-parchment hover:bg-parchment/10">
+              <Button as="a" href="#styles" variant="ghost" size="lg" className="text-parchment-fixed hover:bg-parchment-fixed/10">
                 See the styles
               </Button>
             </div>
@@ -247,7 +247,7 @@ export default function Landing() {
       </section>
 
       {/* ---------------------------------------------------------------- PRICING */}
-      <section className="relative overflow-hidden bg-ink text-parchment">
+      <section className="relative overflow-hidden bg-ink-fixed text-parchment-fixed">
         <AmbientBlobs variant="section" />
         <div className="relative mx-auto max-w-6xl px-6 py-24">
           <Reveal>
@@ -257,9 +257,9 @@ export default function Landing() {
             </h2>
           </Reveal>
 
-          <div className="mt-14 divide-y divide-parchment/10 border-y border-parchment/10">
+          <div className="mt-14 divide-y divide-parchment-fixed/10 border-y border-parchment-fixed/10">
             {PRODUCT_TYPES.map((p) => (
-              <div key={p.id} className="flex items-center justify-between py-5 transition-colors duration-200 hover:bg-parchment/5">
+              <div key={p.id} className="flex items-center justify-between py-5 transition-colors duration-200 hover:bg-parchment-fixed/5">
                 <span className="font-body text-lg">{p.label}</span>
                 <span className="placard text-sm text-brass-bright">{p.priceLabel}</span>
               </div>

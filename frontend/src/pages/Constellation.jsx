@@ -53,7 +53,7 @@ export default function Constellation() {
       )}
 
       {!loading && entries.length > 0 && (
-        <div className="relative mt-10 rounded-sm bg-ink py-8">
+        <div className="relative mt-10 rounded-sm bg-ink-fixed py-8">
           <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="mx-auto w-full max-w-xl">
             {points.slice(1).map((p, i) => (
               <line
