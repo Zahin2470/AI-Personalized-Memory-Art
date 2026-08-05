@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Opts into class-based dark mode (Tailwind v4 defaults to the
+   prefers-color-scheme media query) - ThemeContext toggles a `dark` class
+   on <html>, so `dark:` utilities respond to that instead of OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ---------------------------------------------------------------------
    DESIGN TOKENS
    A small fine-art-gallery palette: ink (deep charcoal-navy walls),
@@ -13,10 +18,29 @@
   --color-ink: #1c2128;
   --color-ink-soft: #262b35;
   --color-ink-line: #3a4150;
+  /* Permanently dark, regardless of theme - for deliberate dark-accent
+     surfaces (Footer, hero/pricing sections, primary buttons, mockup
+     bezels) that were always meant to read as dark ink against their
+     surroundings, not as "the room" that dims in dark mode. --color-ink
+     itself DOES flip (see .dark below) because its dominant use across
+     the app is as body text color, and body text must go light-on-dark. */
+  --color-ink-fixed: #1c2128;
 
   --color-parchment: #f7f1e4;
   --color-parchment-dim: #efe7d8;
   --color-parchment-line: #ddd2b8;
+  /* Permanently light - the text/element color paired with --color-ink-fixed
+     sections (Footer, hero, pricing, primary buttons, mockup bezels). Same
+     reasoning as --color-ink-fixed: --color-parchment itself DOES flip
+     (its dominant role is page background), so anything relying on it for
+     contrast against a fixed-dark surface needs this instead. */
+  --color-parchment-fixed: #f7f1e4;
+
+  /* Fixed "physical paper" tone for frame mats and product mockups - a
+     print doesn't change color when the room lights dim, so this is
+     deliberately NOT overridden under .dark below, unlike --color-parchment
+     (which IS the room/page background and does flip). */
+  --color-mat: #f7f1e4;
 
   --color-brass: #c9a15d;
   --color-brass-bright: #ddbb7c;
@@ -37,6 +61,26 @@
   --shadow-frame-hover: 0 2px 4px rgba(28, 33, 40, 0.12), 0 24px 48px -16px rgba(28, 33, 40, 0.45);
 }
 
+/* ---------------------------------------------------------------------
+   "GALLERY AT NIGHT" - DARK MODE
+   Flips the room, not the art: ink/parchment swap roles (page background
+   and text), so every existing bg-parchment/text-ink usage across the app
+   automatically becomes theme-aware for free. --color-mat is deliberately
+   NOT overridden here - frame mats and product mockups stay the same
+   paper tone regardless of theme, the same way a print doesn't change
+   color when you dim the room around it. Brass/emerald accents are left
+   as-is; they were already designed to read against dark ink sections
+   (hero, pricing), so they carry over correctly.
+------------------------------------------------------------------------ */
+.dark {
+  --color-ink: #f3ede0;
+  --color-parchment: #14171c;
+  --color-parchment-dim: #1c2128;
+  --color-parchment-line: #333a46;
+  --color-warmgray: #a39d8f;
+  --color-warmgray-dim: #7d7869;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -47,6 +91,11 @@
     color: var(--color-ink);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body {
+    color-scheme: dark; /* native controls (date pickers, scrollbars) adapt too */
   }
 
   ::selection {
@@ -135,6 +184,13 @@
   box-shadow: var(--shadow-frame-hover);
 }
 
+/* The physical "paper" a piece is mounted on - fixed regardless of theme
+   or section (see --color-mat above). Used by FramedArt and the gift
+   preview mockups. */
+.frame-mat {
+  background-color: var(--color-mat);
+}
+
 /* Underline that grows in from the left on hover - used for nav/text links */
 .link-underline {
   position: relative;
@@ -176,4 +232,76 @@
 .animate-blob-drift {
   animation: blob-drift var(--blob-duration, 18s) ease-in-out infinite;
   animation-delay: var(--blob-delay, 0s);
+}
+
+/* ---------------------------------------------------------------------
+   PAGE TRANSITIONS
+   A soft fade + slight rise on route change, applied by PageTransition.jsx
+   (keyed on the route path, so React remounts and replays this on every
+   navigation).
+------------------------------------------------------------------------ */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-fade-in {
+  animation: page-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---------------------------------------------------------------------
+   SCROLL REVEAL
+   Used by Reveal.jsx (IntersectionObserver-driven) - starts hidden/offset,
+   the .is-visible class (added once the element enters the viewport)
+   triggers the transition. A transition (not a keyframe animation) so it
+   only ever plays once per element, forward.
+------------------------------------------------------------------------ */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------------
+   GENERATION SHIMMER
+   The "artwork is being generated" state - a soft light sweep across the
+   frame plus a slow pulsing brass border, instead of plain "Generating…"
+   text. Applied by FramedArt.jsx when its `generating` prop is true.
+------------------------------------------------------------------------ */
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 1.8s ease-in-out infinite;
+}
+
+@keyframes generation-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(201, 161, 93, 0.35), var(--shadow-frame);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(201, 161, 93, 0.75), 0 0 24px rgba(201, 161, 93, 0.25), var(--shadow-frame);
+  }
+}
+
+.animate-generation-pulse {
+  animation: generation-pulse 2.2s ease-in-out infinite;
 }

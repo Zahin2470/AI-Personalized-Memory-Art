@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import FramedArt from '../components/FramedArt';
 import Button from '../components/Button';
+import Reveal from '../components/Reveal';
 import { ART_STYLES, PRODUCT_TYPES } from '../lib/constants';
 
 const HERO_PIECES = [
@@ -176,18 +177,20 @@ export default function Landing() {
 
       {/* ---------------------------------------------------------------- HOW IT WORKS */}
       <section id="how-it-works" className="mx-auto max-w-6xl px-6 py-24">
-        <p className="placard text-[11px] text-brass-deep">How a piece gets made</p>
-        <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
-          Three steps, and the machine does the part that isn’t the memory.
-        </h2>
+        <Reveal>
+          <p className="placard text-[11px] text-brass-deep">How a piece gets made</p>
+          <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
+            Three steps, and the machine does the part that isn’t the memory.
+          </h2>
+        </Reveal>
 
         <div className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
-          {PROCESS.map((step) => (
-            <div key={step.num} className="border-t border-brass-deep/40 pt-5">
+          {PROCESS.map((step, i) => (
+            <Reveal key={step.num} delay={i * 100} className="border-t border-brass-deep/40 pt-5">
               <p className="placard text-[10px] text-warmgray">{step.num}</p>
               <h3 className="mt-3 font-display text-2xl italic">{step.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-warmgray">{step.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -195,10 +198,12 @@ export default function Landing() {
       {/* ---------------------------------------------------------------- STYLES */}
       <section id="styles" className="bg-parchment-dim py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <p className="placard text-[11px] text-brass-deep">Seven ways to see it</p>
-          <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
-            Every memory has a medium it wants to be told in.
-          </h2>
+          <Reveal>
+            <p className="placard text-[11px] text-brass-deep">Seven ways to see it</p>
+            <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
+              Every memory has a medium it wants to be told in.
+            </h2>
+          </Reveal>
 
           <div className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-4">
             {ART_STYLES.map((style, i) => (
@@ -227,10 +232,12 @@ export default function Landing() {
 
       {/* ---------------------------------------------------------------- OCCASIONS */}
       <section id="collection" className="mx-auto max-w-6xl px-6 py-24">
-        <p className="placard text-[11px] text-brass-deep">Made for the moments that don’t fade</p>
-        <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
-          Some days are worth mounting.
-        </h2>
+        <Reveal>
+          <p className="placard text-[11px] text-brass-deep">Made for the moments that don’t fade</p>
+          <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
+            Some days are worth mounting.
+          </h2>
+        </Reveal>
 
         <div className="mt-14 grid grid-cols-2 gap-8 lg:grid-cols-4">
           {OCCASIONS.map((occ, i) => (
@@ -243,10 +250,12 @@ export default function Landing() {
       <section className="relative overflow-hidden bg-ink text-parchment">
         <AmbientBlobs variant="section" />
         <div className="relative mx-auto max-w-6xl px-6 py-24">
-          <p className="placard text-[11px] text-brass-bright">Take it home</p>
-          <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
-            From your screen to your wall.
-          </h2>
+          <Reveal>
+            <p className="placard text-[11px] text-brass-bright">Take it home</p>
+            <h2 className="mt-3 max-w-lg font-display text-4xl italic leading-tight">
+              From your screen to your wall.
+            </h2>
+          </Reveal>
 
           <div className="mt-14 divide-y divide-parchment/10 border-y border-parchment/10">
             {PRODUCT_TYPES.map((p) => (
@@ -261,31 +270,36 @@ export default function Landing() {
 
       {/* ---------------------------------------------------------------- GUESTBOOK */}
       <section className="mx-auto max-w-6xl px-6 py-24">
-        <p className="placard text-[11px] text-brass-deep">From the guestbook</p>
+        <Reveal>
+          <p className="placard text-[11px] text-brass-deep">From the guestbook</p>
+        </Reveal>
         <div className="mt-14 grid gap-10 md:grid-cols-3">
-          {GUESTBOOK.map((g) => (
-            <figure key={g.name} className="flex flex-col">
+          {GUESTBOOK.map((g, i) => (
+            <Reveal as="figure" key={g.name} delay={i * 100} className="flex flex-col">
               <blockquote className="font-display text-xl italic leading-snug text-ink/90">
                 “{g.quote}”
               </blockquote>
               <figcaption className="placard mt-5 text-[10px] text-warmgray">
                 {g.name} — {g.detail}
               </figcaption>
-            </figure>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* ---------------------------------------------------------------- FINAL CTA */}
       <section className="border-t border-ink/10 bg-parchment-dim">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-24 md:flex-row md:items-center md:justify-between">
+        <Reveal
+          as="div"
+          className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-24 md:flex-row md:items-center md:justify-between"
+        >
           <h2 className="max-w-md font-display text-4xl italic leading-tight">
             Start with whatever you have. That’s usually enough.
           </h2>
           <Button as={Link} to="/register" variant="brass" size="lg">
             Start a piece — free to preview
           </Button>
-        </div>
+        </Reveal>
       </section>
     </div>
   );

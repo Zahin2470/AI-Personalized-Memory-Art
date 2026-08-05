@@ -23,6 +23,8 @@ export default function ArtworkVariationCard({
           imageUrl={active.imageUrl}
           gradient={styleGradients[active.style]}
           index={index}
+          float={!regenerating}
+          generating={regenerating}
         />
         <button
           onClick={() => onToggleFavorite(active._id)}

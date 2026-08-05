@@ -357,8 +357,9 @@ export default function MemoryDetail() {
               interactive
               index={i}
               float={generatingStyle !== style.id}
+              generating={generatingStyle === style.id}
               onClick={() => generateArtwork(style.id)}
-              className={generatingStyle === style.id ? 'pointer-events-none opacity-70' : ''}
+              className={generatingStyle === style.id ? 'pointer-events-none' : ''}
             />
           ))}
         </div>
