@@ -25,6 +25,7 @@ export default function ArtworkVariationCard({
           index={index}
           float={!regenerating}
           generating={regenerating}
+          zoomable={!regenerating}
         />
         <button
           onClick={() => onToggleFavorite(active._id)}

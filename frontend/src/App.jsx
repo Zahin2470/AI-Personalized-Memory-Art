@@ -3,6 +3,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import PageTransition from './components/PageTransition';
+import LightboxModal from './components/LightboxModal';
+import CustomCursor from './components/CustomCursor';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -31,6 +33,8 @@ import AdminContributions from './pages/AdminContributions';
 export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-parchment">
+      <CustomCursor />
+      <LightboxModal />
       <Navbar />
       <main className="flex-1">
         <PageTransition>

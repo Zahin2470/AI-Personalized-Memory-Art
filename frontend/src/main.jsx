@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App.jsx';
 import { AuthProvider } from './lib/auth.jsx';
 import { ThemeProvider } from './lib/theme.jsx';
+import { LightboxProvider } from './lib/lightbox.jsx';
 import './index.css';
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -14,11 +15,13 @@ const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 // sign-in) still works. The Google button itself just won't render/function.
 const Root = () => (
   <ThemeProvider>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
+    <LightboxProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </LightboxProvider>
   </ThemeProvider>
 );
 

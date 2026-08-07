@@ -53,6 +53,7 @@ export default function Favorites() {
                 imageUrl={a.imageUrl}
                 gradient={STYLE_GRADIENTS[a.style]}
                 index={i}
+                zoomable
               />
             </Link>
           ))}

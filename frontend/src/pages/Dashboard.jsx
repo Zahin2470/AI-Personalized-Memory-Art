@@ -130,6 +130,7 @@ export default function Dashboard() {
                   imageUrl={m.photos?.[0]?.url}
                   index={i}
                   interactive
+                  zoomable
                 />
               )}
             </Link>

@@ -1,3 +1,5 @@
+import { useLightbox } from '../lib/lightbox';
+
 /**
  * FramedArt - the one visual idea this whole app is built around: every
  * piece of generated art (or a placeholder for one) gets mounted like a
@@ -15,6 +17,14 @@
  * the plain "loading" treatment for a light sweep across the frame plus a
  * slow pulsing brass glow, since this is the single most "the AI is making
  * something" moment in the whole app and deserves more than static text.
+ *
+ * Pass `zoomable` to add a corner trigger that opens the image full-screen.
+ * Deliberately a `<span role="button">`, not a real `<button>` - this
+ * component's own Wrapper can already be a <button> (when `interactive`),
+ * and browsers disallow nesting interactive controls; a real <button> here
+ * would be invalid HTML. Also stops click propagation, so it works
+ * correctly even when a parent wraps this whole card in a react-router
+ * <Link> (Dashboard, Favorites) - zoom without triggering navigation.
  */
 export default function FramedArt({
   imageUrl,
@@ -28,12 +38,14 @@ export default function FramedArt({
   interactive = false,
   float = true,
   generating = false,
+  zoomable = false,
   index = 0,
   onClick,
   style,
   className = '',
 }) {
   const Wrapper = interactive ? 'button' : 'div';
+  const { openLightbox } = useLightbox();
 
   const floatStyle = float
     ? {
@@ -41,6 +53,29 @@ export default function FramedArt({
         '--float-duration': `${4.5 + (index % 4) * 0.5}s`,
       }
     : {};
+
+  const handleZoom = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openLightbox({ src: imageUrl, title, meta: medium });
+  };
+
+  const zoomTrigger = zoomable && imageUrl && (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label="View full size"
+      onClick={handleZoom}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') handleZoom(e);
+      }}
+      className="absolute bottom-2 right-2 z-10 cursor-pointer rounded-full bg-ink-fixed/60 p-1.5 text-parchment-fixed opacity-0 transition-opacity group-hover:opacity-100"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
 
   return (
     <Wrapper
@@ -69,6 +104,7 @@ export default function FramedArt({
               <div className="animate-shimmer-sweep absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
             </div>
           )}
+          {zoomTrigger}
         </div>
       </div>
 
