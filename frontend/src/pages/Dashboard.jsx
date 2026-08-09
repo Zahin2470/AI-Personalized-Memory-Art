@@ -4,6 +4,7 @@ import api from '../lib/api';
 import FramedArt from '../components/FramedArt';
 import Button from '../components/Button';
 import { EMOTION_LABELS } from '../lib/constants';
+import Seo from '../components/Seo';
 
 const EMOTION_GRADIENTS = {
   joy: 'from-amber-200 via-orange-100 to-yellow-100',
@@ -54,6 +55,7 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
+      <Seo title="My memories" description="Browse and search everything you’ve turned into art." />
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <p className="placard text-[11px] text-brass-deep">Your collection</p>

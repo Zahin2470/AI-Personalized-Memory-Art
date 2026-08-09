@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+
+# Everything past this point requires a logged-in session anyway (or is a
+# per-user/per-invite dynamic page), so there's nothing useful to index -
+# excluding it keeps crawl budget on the pages that actually matter.
+Disallow: /dashboard
+Disallow: /memories/
+Disallow: /cart
+Disallow: /orders
+Disallow: /favorites
+Disallow: /timeline
+Disallow: /constellation
+Disallow: /admin
+Disallow: /artworks/
+Disallow: /reset-password/
+Disallow: /contribute/
+Disallow: /checkout/
+
+Sitemap: https://your-domain.com/sitemap.xml

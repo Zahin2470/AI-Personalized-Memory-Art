@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import FramedArt from '../components/FramedArt';
+import Seo from '../components/Seo';
 
 const STYLE_GRADIENTS = {
   watercolor: 'from-blue-100 via-sky-50 to-teal-100',
@@ -28,6 +29,7 @@ export default function Favorites() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
+      <Seo title="Favorites" description="The pieces from your collection you’ve favorited." />
       <p className="placard text-[11px] text-brass-deep">The best of the collection</p>
       <h1 className="mt-2 font-display text-4xl italic">Favorites</h1>
 

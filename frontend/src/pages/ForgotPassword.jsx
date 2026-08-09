@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import Field from '../components/Field';
 import Button from '../components/Button';
+import Seo from '../components/Seo';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -43,6 +44,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
+      <Seo title="Reset your password" />
       <p className="placard text-[11px] text-brass-deep">Locked out?</p>
       <h1 className="mt-3 font-display text-4xl italic">Reset your password</h1>
       <p className="mt-3 text-sm text-warmgray">Enter your email and we’ll send a link to set a new one.</p>

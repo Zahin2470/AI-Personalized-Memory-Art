@@ -8,6 +8,30 @@
       name="description"
       content="Upload a memory — photos, a voice note, a date — and Memory Art turns it into a one-of-one illustrated piece, ready to hang, gift, or keep."
     />
+
+    <!--
+      IMPORTANT: replace https://your-domain.com everywhere below with your
+      real production URL once deployed - social platforms (Facebook,
+      LinkedIn, Twitter/X, WhatsApp) fetch these tags directly from this
+      file and cache the result, so a placeholder domain here means link
+      previews will point at the wrong place until this is updated and the
+      cache is invalidated (most platforms have a "scrape again" debug tool
+      for that - e.g. Facebook's Sharing Debugger, Twitter's Card Validator).
+    -->
+    <link rel="canonical" href="https://your-domain.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Memory Art" />
+    <meta property="og:url" content="https://your-domain.com/" />
+    <meta property="og:image" content="https://your-domain.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://your-domain.com/og-image.png" />
+    <!-- og:title, og:description, twitter:title, twitter:description are set
+         per-page at runtime by src/components/Seo.jsx - these two static
+         image/url tags are the only ones that can't reasonably vary per page. -->
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import Field from '../components/Field';
 import Button from '../components/Button';
+import Seo from '../components/Seo';
 
 const emptyDate = () => ({ label: '', date: '' });
 
@@ -55,6 +56,7 @@ export default function NewMemory() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
+      <Seo title="New memory" description="Share a memory and let AI turn it into a piece of art." />
       <p className="placard text-[11px] text-brass-deep">Accn. 01 — Share</p>
       <h1 className="mt-2 font-display text-4xl italic">Tell us what happened.</h1>
       <p className="mt-3 text-sm text-warmgray">

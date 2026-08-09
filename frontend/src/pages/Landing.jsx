@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import FramedArt from '../components/FramedArt';
 import Button from '../components/Button';
 import Reveal from '../components/Reveal';
+import Seo from '../components/Seo';
 import { ART_STYLES, PRODUCT_TYPES } from '../lib/constants';
 
 const HERO_PIECES = [
@@ -104,6 +105,7 @@ export default function Landing() {
 
   return (
     <div>
+      <Seo />
       {/* ---------------------------------------------------------------- HERO */}
       <section className="relative overflow-hidden bg-ink-fixed text-parchment-fixed">
         <AmbientBlobs variant="hero" />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
+import Seo from '../components/Seo';
 
 export default function Timeline() {
   const [data, setData] = useState(null);
@@ -17,6 +18,7 @@ export default function Timeline() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      <Seo title="Timeline" description="Your dated memories, woven into one connected story." />
       <p className="placard text-[11px] text-brass-deep">Your story so far</p>
       <h1 className="mt-2 font-display text-4xl italic">Timeline</h1>
 

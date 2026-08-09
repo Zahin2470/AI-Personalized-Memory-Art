@@ -6,6 +6,7 @@ import ArtworkVariationCard from '../components/ArtworkVariationCard';
 import Button from '../components/Button';
 import Field from '../components/Field';
 import { ART_STYLES } from '../lib/constants';
+import Seo from '../components/Seo';
 
 const STYLE_GRADIENTS = {
   watercolor: 'from-blue-100 via-sky-50 to-teal-100',
@@ -190,6 +191,7 @@ export default function MemoryDetail() {
   if (memory.status === 'sealed') {
     return (
       <div className="mx-auto max-w-lg px-6 py-24 text-center">
+        <Seo title="Sealed memory" description="This memory is sealed until its reveal date." />
         <p className="placard text-[11px] text-brass-deep">Memory Capsule</p>
         <h1 className="mt-3 font-display text-4xl italic">{memory.title || 'Sealed'}</h1>
         <p className="mt-4 text-sm text-warmgray">
@@ -213,6 +215,7 @@ export default function MemoryDetail() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
+      <Seo title={memory.title || 'Your memory'} description={memory.description?.slice(0, 155)} />
       <p className="placard text-[11px] text-brass-deep">{memory.status === 'analyzed' ? 'Analyzed' : 'Draft'}</p>
       <h1 className="mt-2 font-display text-4xl italic">{memory.title || 'Untitled memory'}</h1>
       <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink/80">{memory.description}</p>

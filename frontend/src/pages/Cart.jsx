@@ -4,6 +4,7 @@ import api from '../lib/api';
 import Button from '../components/Button';
 import Field from '../components/Field';
 import { PRODUCT_TYPES } from '../lib/constants';
+import Seo from '../components/Seo';
 
 const labelFor = (type) => PRODUCT_TYPES.find((p) => p.id === type)?.label || type;
 const fmt = (cents) => Math.round(cents / 100).toLocaleString('en-US');
@@ -105,6 +106,7 @@ export default function Cart() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      <Seo title="Your cart" />
       <p className="placard text-[11px] text-brass-deep">Ready to hang</p>
       <h1 className="mt-2 font-display text-4xl italic">Your cart</h1>
 

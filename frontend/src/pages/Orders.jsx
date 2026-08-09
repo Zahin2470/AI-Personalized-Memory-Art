@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
+import Seo from '../components/Seo';
 import { PRODUCT_TYPES } from '../lib/constants';
 
 const STATUS_LABEL = {
@@ -28,6 +29,7 @@ export default function Orders() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      <Seo title="My orders" description="Track the status of everything you’ve ordered." />
       <p className="placard text-[11px] text-brass-deep">Order history</p>
       <h1 className="mt-2 font-display text-4xl italic">My orders</h1>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
+import Seo from '../components/Seo';
 
 const SIZE = 600;
 const CENTER = SIZE / 2;
@@ -36,6 +37,7 @@ export default function Constellation() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      <Seo title="Constellation" description="Your memories, laid out as a radial star map." />
       <p className="placard text-[11px] text-brass-deep">A different shape for the same story</p>
       <div className="mt-2 flex items-center justify-between">
         <h1 className="font-display text-4xl italic">Constellation</h1>

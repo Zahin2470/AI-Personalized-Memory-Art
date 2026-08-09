@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth';
 import Field from '../components/Field';
 import Button from '../components/Button';
 import GoogleAuthButton from '../components/GoogleAuthButton';
+import Seo from '../components/Seo';
 
 export default function Login() {
   const { login } = useAuth();
@@ -28,6 +29,7 @@ export default function Login() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
+      <Seo title="Log in" description="Log in to Memory Art to keep making pieces from your memories." />
       <p className="placard text-[11px] text-brass-deep">Welcome back</p>
       <h1 className="mt-3 font-display text-4xl italic">Log in</h1>
 

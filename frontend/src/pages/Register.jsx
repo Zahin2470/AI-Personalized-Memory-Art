@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth';
 import Field from '../components/Field';
 import Button from '../components/Button';
 import GoogleAuthButton from '../components/GoogleAuthButton';
+import Seo from '../components/Seo';
 
 export default function Register() {
   const { register } = useAuth();
@@ -34,6 +35,7 @@ export default function Register() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
+      <Seo title="Create an account" description="Start turning your memories into art — free to preview." />
       <p className="placard text-[11px] text-brass-deep">Start a piece</p>
       <h1 className="mt-3 font-display text-4xl italic">Create an account</h1>
       <p className="mt-3 text-sm text-warmgray">Just a name, email, and password — an address only shows up later, at checkout, if you order something physical.</p>
